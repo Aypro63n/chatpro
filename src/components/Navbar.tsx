@@ -4,9 +4,12 @@ import {
   Shield, 
   Menu,
   X,
-  ArrowRight
+  ArrowRight,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 interface NavbarProps {
   onOpenAuth: (mode?: 'login' | 'register') => void;
@@ -22,6 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentView = 'landing' 
 }) => {
   const { currentUser, isOwner, isAdmin, isMaintainer, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const scrollToSection = (id: string) => {
@@ -133,6 +137,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             </div>
           )}
+
+          {/* Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full text-neutral-600 hover:text-black dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-neutral-800" />}
+          </button>
 
           {/* Mobile hamburger */}
           {currentView === 'landing' && (

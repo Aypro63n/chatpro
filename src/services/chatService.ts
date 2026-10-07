@@ -544,64 +544,24 @@ export const uploadMediaFile = async (
   fileName: string,
   onProgress?: (progress: number) => void
 ): Promise<string> => {
-  // Validate maximum file sizes
   const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
-  const MAX_FALLBACK_SIZE = 600 * 1024; // 600KB for offline DataURL fallback
   if (file.size > MAX_FILE_SIZE) {
     throw new Error('File exceeds the 15MB size limit.');
   }
 
-  const userId = db.app ? (file as any).uid || 'media' : 'media';
-  const cleanName = fileName.replace(/[^a-zA-Z0-9_.-]/g, '');
-  const storagePath = `uploads/${Date.now()}_${cleanName}`;
+  if (onProgress) onProgress(25);
 
-  try {
-    const storageRef = ref(storage, storagePath);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    return new Promise((resolve, reject) => {
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          if (onProgress) onProgress(progress);
-        },
-        (error) => {
-          console.warn('Firebase Storage upload failed:', error);
-          if (file.size <= MAX_FALLBACK_SIZE) {
-            const reader = new FileReader();
-            reader.onload = () => {
-              if (onProgress) onProgress(100);
-              resolve(reader.result as string);
-            };
-            reader.onerror = () => reject(new Error('Failed to process file'));
-            reader.readAsDataURL(file);
-          } else {
-            reject(new Error('Storage upload failed and file is too large for database storage (>600KB).'));
-          }
-        },
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          if (onProgress) onProgress(100);
-          resolve(downloadURL);
-        }
-      );
-    });
-  } catch {
-    if (file.size <= MAX_FALLBACK_SIZE) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          if (onProgress) onProgress(100);
-          resolve(reader.result as string);
-        };
-        reader.onerror = () => reject(new Error('Failed to process file'));
-        reader.readAsDataURL(file);
-      });
-    } else {
-      throw new Error('Upload service unavailable and file exceeds 600KB limit.');
-    }
-  }
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (onProgress) onProgress(100);
+      resolve(reader.result as string);
+    };
+    reader.onerror = () => {
+      reject(new Error('Failed to read file data.'));
+    };
+    reader.readAsDataURL(file);
+  });
 };
 
 export const submitReport = async (

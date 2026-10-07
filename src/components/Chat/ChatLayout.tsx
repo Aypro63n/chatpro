@@ -32,7 +32,16 @@ import {
   Wifi, 
   WifiOff,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  Phone,
+  Video,
+  PhoneOff,
+  MicOff,
+  Camera,
+  CameraOff,
+  Image as ImageIcon,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { 
   collection, 
@@ -80,10 +89,11 @@ import { AdminPanelModal } from '../Admin/AdminPanelModal';
 
 export const ChatLayout: React.FC = () => {
   const { currentUser, userProfile, isOwner, isAdmin, isMaintainer, isOnline } = useAuth();
-  const { wallpaper } = useTheme();
+  const { theme, toggleTheme, wallpaper } = useTheme();
 
   // Active conversation defaults to Global Chat
   const [activeConversation, setActiveConversation] = useState<Conversation>(getGlobalChatConversation());
+  const [mobileView, setMobileView] = useState<'sidebar' | 'chat'>('sidebar');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
 
@@ -128,6 +138,36 @@ export const ChatLayout: React.FC = () => {
   const [reportingUser, setReportingUser] = useState<{ uid: string; name: string } | null>(null);
   const [reportReason, setReportReason] = useState('');
   const [submittingReport, setSubmittingReport] = useState(false);
+
+  // Call feature state
+  const [activeCall, setActiveCall] = useState<{
+    type: 'audio' | 'video';
+    partnerName: string;
+    partnerAvatar: string;
+    startTime: number;
+  } | null>(null);
+  const [callMuted, setCallMuted] = useState(false);
+  const [callVideoOff, setCallVideoOff] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
+
+  useEffect(() => {
+    let timer: any;
+    if (activeCall) {
+      setCallDuration(0);
+      timer = setInterval(() => {
+        setCallDuration((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setCallDuration(0);
+    }
+    return () => clearInterval(timer);
+  }, [activeCall]);
+
+  const formatCallDuration = (sec: number) => {
+    const mins = Math.floor(sec / 60);
+    const secs = sec % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -557,7 +597,7 @@ export const ChatLayout: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       {/* 1. LEFT SIDEBAR: Conversations List                           */}
       {/* ------------------------------------------------------------- */}
-      <aside className={`w-full md:w-80 lg:w-88 flex flex-col border-r border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 backdrop-blur-md shrink-0 ${activeConversation.id !== GLOBAL_CHAT_ID ? 'hidden md:flex' : 'flex'}`}>
+      <aside className={`w-full md:w-80 lg:w-88 flex flex-col border-r border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 backdrop-blur-md shrink-0 ${mobileView === 'chat' ? 'hidden md:flex' : 'flex'}`}>
         
         {/* Sidebar Header */}
         <div className="p-3.5 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
@@ -661,7 +701,7 @@ export const ChatLayout: React.FC = () => {
           
           {/* ALWAYS PINNED AT THE TOP: GLOBAL CHAT */}
           <div
-            onClick={() => setActiveConversation(getGlobalChatConversation())}
+            onClick={() => { setActiveConversation(getGlobalChatConversation()); setMobileView('chat'); }}
             className={`p-3 flex items-start gap-3 cursor-pointer transition-all border-b border-indigo-100/80 dark:border-indigo-950/50 ${
               activeConversation.id === GLOBAL_CHAT_ID 
                 ? 'bg-indigo-50/90 dark:bg-indigo-950/40 border-l-4 border-l-indigo-600' 
@@ -731,7 +771,7 @@ export const ChatLayout: React.FC = () => {
               return (
                 <div
                   key={conv.id}
-                  onClick={() => setActiveConversation(conv)}
+                  onClick={() => { setActiveConversation(conv); setMobileView('chat'); }}
                   className={`p-3 flex items-start gap-3 cursor-pointer transition-colors ${
                     isSelected 
                       ? 'bg-slate-100 dark:bg-slate-800/90 border-l-4 border-l-indigo-600' 
@@ -793,7 +833,7 @@ export const ChatLayout: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       {/* 2. CENTER AREA: Active Conversation View                      */}
       {/* ------------------------------------------------------------- */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-slate-950">
+      <main className={`flex-1 flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-slate-950 ${mobileView === 'sidebar' ? 'hidden md:flex' : 'flex'}`}>
         
         {/* Chat Top Header */}
         <div className="h-14 px-4 sm:px-6 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between shrink-0 z-10">
@@ -801,7 +841,7 @@ export const ChatLayout: React.FC = () => {
           <div className="flex items-center gap-3 min-w-0">
             {/* Back button on mobile */}
             <button
-              onClick={() => setActiveConversation(getGlobalChatConversation())}
+              onClick={() => setMobileView('sidebar')}
               className="md:hidden p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -862,6 +902,30 @@ export const ChatLayout: React.FC = () => {
 
           {/* Chat Action Icons */}
           <div className="flex items-center gap-1 sm:gap-2">
+            <button
+              onClick={() => setActiveCall({ type: 'audio', partnerName: activeInfo.title, partnerAvatar: activeInfo.avatar || userProfile?.photoURL || '', startTime: Date.now() })}
+              title="Start Audio Call"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <Phone className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => setActiveCall({ type: 'video', partnerName: activeInfo.title, partnerAvatar: activeInfo.avatar || userProfile?.photoURL || '', startTime: Date.now() })}
+              title="Start Video Call"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <Video className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
+            </button>
+
             <button
               onClick={() => setShowSearchInChat(!showSearchInChat)}
               title="Search inside this conversation"
@@ -1130,9 +1194,9 @@ export const ChatLayout: React.FC = () => {
                         </div>
                       )}
 
-                      {/* Action Toolbar on Hover */}
+                      {/* Action Toolbar on Hover & Touch */}
                       {!isDeleted && (
-                        <div className="absolute top-0 right-0 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5 p-1 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md z-10">
+                        <div className="absolute top-0 right-0 -translate-y-1/2 flex items-center gap-0.5 p-1 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md z-10 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                           
                           {/* Reply */}
                           <button
@@ -1301,8 +1365,27 @@ export const ChatLayout: React.FC = () => {
               <div className="flex items-center gap-0.5 text-slate-400 pb-1">
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  title="Attach file, photo or video"
+                  onClick={() => {
+                    if (fileInputRef.current) {
+                      fileInputRef.current.accept = 'image/*,video/*';
+                      fileInputRef.current.click();
+                    }
+                  }}
+                  title="Send photo or video"
+                  className="p-2 rounded-xl hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  <ImageIcon className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (fileInputRef.current) {
+                      fileInputRef.current.accept = '*/*';
+                      fileInputRef.current.click();
+                    }
+                  }}
+                  title="Attach document or file"
                   className="p-2 rounded-xl hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   <Paperclip className="w-4 h-4" />
@@ -1580,6 +1663,81 @@ export const ChatLayout: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Active Call Modal Overlay */}
+      {activeCall && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl animate-in fade-in">
+          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-8 flex flex-col items-center text-white shadow-2xl relative overflow-hidden">
+            
+            {/* Background ambient glow */}
+            <div className="absolute inset-0 bg-gradient-to-b from-indigo-600/10 via-transparent to-transparent pointer-events-none" />
+
+            {/* Call type badge */}
+            <span className="px-3 py-1 rounded-full text-xs font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-6 uppercase tracking-wider">
+              {activeCall.type === 'video' ? 'Secure Video Call' : 'Secure Audio Call'}
+            </span>
+
+            {/* Avatar or Video feed box */}
+            {activeCall.type === 'video' && !callVideoOff ? (
+              <div className="w-full h-64 rounded-2xl bg-slate-950 border border-slate-800 mb-6 flex flex-col items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 flex items-center justify-center opacity-30">
+                  <Video className="w-16 h-16 text-indigo-400 animate-pulse" />
+                </div>
+                <div className="absolute bottom-3 right-3 px-3 py-1 rounded-xl bg-black/60 backdrop-blur-md text-xs font-mono text-white flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                  <span>Live HD Stream</span>
+                </div>
+              </div>
+            ) : (
+              <div className="relative mb-6">
+                <img
+                  src={activeCall.partnerAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${activeCall.partnerName}`}
+                  alt={activeCall.partnerName}
+                  className="w-28 h-28 rounded-full object-cover border-4 border-indigo-500/50 shadow-2xl animate-pulse"
+                />
+                <span className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-slate-900" />
+              </div>
+            )}
+
+            <h3 className="font-extrabold text-xl text-white mb-1">
+              {activeCall.partnerName}
+            </h3>
+            <p className="text-sm font-mono text-indigo-400 mb-6">
+              {formatCallDuration(callDuration)}
+            </p>
+
+            {/* Call Controls Bar */}
+            <div className="flex items-center gap-4 bg-slate-800/80 border border-slate-700/80 px-6 py-3 rounded-full backdrop-blur-md">
+              <button
+                onClick={() => setCallMuted(!callMuted)}
+                className={`p-3 rounded-full transition-colors ${callMuted ? 'bg-red-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'}`}
+                title={callMuted ? 'Unmute' : 'Mute'}
+              >
+                {callMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              </button>
+
+              {activeCall.type === 'video' && (
+                <button
+                  onClick={() => setCallVideoOff(!callVideoOff)}
+                  className={`p-3 rounded-full transition-colors ${callVideoOff ? 'bg-red-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'}`}
+                  title={callVideoOff ? 'Turn Camera On' : 'Turn Camera Off'}
+                >
+                  {callVideoOff ? <CameraOff className="w-5 h-5" /> : <Camera className="w-5 h-5" />}
+                </button>
+              )}
+
+              <button
+                onClick={() => setActiveCall(null)}
+                className="p-3.5 rounded-full bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/30 transition-transform hover:scale-105"
+                title="End Call"
+              >
+                <PhoneOff className="w-6 h-6" />
+              </button>
+            </div>
+
           </div>
         </div>
       )}
