@@ -1,0 +1,134 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Registered ChatPro user profile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "username": { "type": "string", "maxLength": 50, "pattern": "^[a-zA-Z0-9_]{3,30}$" },
+        "email": { "type": "string", "maxLength": 150 },
+        "bio": { "type": "string", "maxLength": 280 },
+        "photoURL": { "type": "string", "maxLength": 2048 },
+        "status": { "type": "string", "enum": ["online", "offline"] },
+        "lastSeen": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "role": { "type": "string", "enum": ["member", "admin", "owner"] },
+        "blockedUsers": { "type": "array" },
+        "showOnlineStatus": { "type": "boolean" },
+        "readReceipts": { "type": "boolean" }
+      },
+      "required": ["uid", "displayName", "username", "email"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "1-to-1 direct conversation or group conversation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "enum": ["direct", "group"] },
+        "participants": { "type": "array" },
+        "name": { "type": "string", "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 300 },
+        "photoURL": { "type": "string", "maxLength": 2048 },
+        "createdBy": { "type": "string", "maxLength": 128 },
+        "admins": { "type": "array" },
+        "pinnedMessageId": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["id", "type", "participants"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Message within a conversation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "conversationId": { "type": "string", "maxLength": 128 },
+        "senderId": { "type": "string", "maxLength": 128 },
+        "senderName": { "type": "string", "maxLength": 100 },
+        "type": { "type": "string", "enum": ["text", "image", "video", "audio", "file"] },
+        "content": { "type": "string", "maxLength": 5000 },
+        "mediaUrl": { "type": "string", "maxLength": 2048 },
+        "fileName": { "type": "string", "maxLength": 255 },
+        "duration": { "type": "number" },
+        "edited": { "type": "boolean" },
+        "deleted": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["sent", "delivered", "read"] }
+      },
+      "required": ["id", "conversationId", "senderId", "type"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "User moderation report",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "reportedBy": { "type": "string", "maxLength": 128 },
+        "reportedUser": { "type": "string", "maxLength": 128 },
+        "reason": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["pending", "resolved", "dismissed"] }
+      },
+      "required": ["id", "reportedBy", "reportedUser", "reason", "status"]
+    },
+    "Announcement": {
+      "title": "Announcement",
+      "description": "System broadcast announcement",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 150 },
+        "content": { "type": "string", "maxLength": 2000 },
+        "createdBy": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["id", "title", "content"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Administrative role and moderation audit record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "actorUid": { "type": "string", "maxLength": 128 },
+        "actorName": { "type": "string", "maxLength": 100 },
+        "actorRole": { "type": "string", "enum": ["owner", "admin", "maintainer"] },
+        "targetUid": { "type": "string", "maxLength": 128 },
+        "targetName": { "type": "string", "maxLength": 100 },
+        "action": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "reason": { "type": "string", "maxLength": 500 }
+      },
+      "required": ["id", "actorUid", "actorRole", "targetUid", "action", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile collection"
+    },
+    "/auditLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Security and moderation audit logs"
+    },
+    "/conversations/{conversationId}": {
+      "schema": { "$ref": "#/entities/Conversation" },
+      "description": "Direct and group conversations"
+    },
+    "/conversations/{conversationId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/Message" },
+      "description": "Conversation message log"
+    },
+    "/globalMessages/{messageId}": {
+      "schema": { "$ref": "#/entities/Message" },
+      "description": "Public Global Chat messages visible to all authenticated users"
+    },
+    "/reports/{reportId}": {
+      "schema": { "$ref": "#/entities/Report" },
+      "description": "Moderation reports"
+    },
+    "/announcements/{announcementId}": {
+      "schema": { "$ref": "#/entities/Announcement" },
+      "description": "System-wide announcements"
+    }
+  }
+}

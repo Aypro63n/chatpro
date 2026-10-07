@@ -1,0 +1,11 @@
+{
+  "name": "ChatPro",
+  "description": "Real people. Real conversations. Production-quality human-to-human real-time messaging platform.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
