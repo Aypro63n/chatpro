@@ -46,14 +46,6 @@ const AppContent: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#000000] text-white font-sans selection:bg-white selection:text-black">
       
-      {/* Universal Navbar */}
-      <Navbar
-        onOpenAuth={handleOpenAuth}
-        onOpenChat={handleOpenChat}
-        onOpenAdmin={() => setAdminModalOpen(true)}
-        currentView={currentView}
-      />
-
       {/* Main View Switching */}
       <div className="flex-1 flex flex-col">
         {currentView === 'landing' && (

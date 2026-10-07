@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-export type WallpaperStyle = 'default' | 'midnight' | 'emerald' | 'cyber' | 'warm';
+export type WallpaperStyle = 'default' | 'midnight' | 'emerald' | 'cyber' | 'warm' | 'obsidian' | 'carbon' | 'aurora';
 
 interface ThemeContextType {
   theme: 'dark' | 'light';

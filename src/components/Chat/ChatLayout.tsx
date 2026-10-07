@@ -41,7 +41,8 @@ import {
   CameraOff,
   Image as ImageIcon,
   Sun,
-  Moon
+  Moon,
+  Share2
 } from 'lucide-react';
 import { 
   collection, 
@@ -139,6 +140,30 @@ export const ChatLayout: React.FC = () => {
   const [reportReason, setReportReason] = useState('');
   const [submittingReport, setSubmittingReport] = useState(false);
 
+  // Forwarding message state
+  const [forwardingMessage, setForwardingMessage] = useState<Message | null>(null);
+
+  const handleForwardMessage = async (targetConv: Conversation) => {
+    if (!forwardingMessage || !userProfile) return;
+    try {
+      await sendMessage(
+        targetConv,
+        userProfile,
+        forwardingMessage.text || forwardingMessage.content || 'Forwarded message',
+        forwardingMessage.type || 'text',
+        {
+          mediaUrl: forwardingMessage.mediaUrl,
+          fileName: forwardingMessage.fileName,
+          fileSize: forwardingMessage.fileSize,
+          duration: forwardingMessage.duration
+        }
+      );
+      setForwardingMessage(null);
+    } catch (err) {
+      console.error('Failed to forward message:', err);
+    }
+  };
+
   // Call feature state
   const [activeCall, setActiveCall] = useState<{
     type: 'audio' | 'video';
@@ -169,11 +194,105 @@ export const ChatLayout: React.FC = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const startCall = async (type: 'audio' | 'video') => {
+    setActiveCall({ type, partnerName: activeInfo.title, partnerAvatar: activeInfo.avatar || userProfile?.photoURL || '', startTime: Date.now() });
+    if (userProfile && activeConversation.id !== GLOBAL_CHAT_ID) {
+      try {
+        await sendMessage(activeConversation, userProfile, `Started a ${type} call 📞`, 'text');
+      } catch (err) {
+        console.error('Failed to broadcast call signal:', err);
+      }
+    }
+  };
+
+  const playNotificationChime = () => {
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
+      gain1.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+      
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      
+      osc1.start();
+      osc1.stop(ctx.currentTime + 0.25);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.08);
+      gain2.gain.setValueAtTime(0.12, ctx.currentTime + 0.08);
+      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+
+      osc2.start(ctx.currentTime + 0.08);
+      osc2.stop(ctx.currentTime + 0.35);
+    } catch {
+      // Audio context restricted or unsupported
+    }
+  };
+
+  const lastMessageCountRef = useRef<number>(0);
+  const prevConvIdRef = useRef<string>(activeConversation.id);
+
+  // Draft system: save draft on switch and load draft on conversation change
+  useEffect(() => {
+    const prevId = prevConvIdRef.current;
+    const currId = activeConversation.id;
+
+    if (prevId !== currId) {
+      if (prevId) {
+        if (inputText.trim()) {
+          localStorage.setItem(`chat_draft_${prevId}`, inputText);
+        } else {
+          localStorage.removeItem(`chat_draft_${prevId}`);
+        }
+      }
+
+      const savedDraft = localStorage.getItem(`chat_draft_${currId}`) || '';
+      setInputText(savedDraft);
+      setReplyingTo(null);
+
+      prevConvIdRef.current = currId;
+    }
+  }, [activeConversation.id]);
+
+  // Save draft on input change
+  useEffect(() => {
+    if (activeConversation.id) {
+      if (inputText.trim()) {
+        localStorage.setItem(`chat_draft_${activeConversation.id}`, inputText);
+      } else {
+        localStorage.removeItem(`chat_draft_${activeConversation.id}`);
+      }
+    }
+  }, [inputText, activeConversation.id]);
+
   // Refs
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const typingTimeoutRef = useRef<any>(null);
   const lastSendTimeRef = useRef<number>(0);
+  const longPressTimerRef = useRef<any>(null);
+
+  const handleTouchStart = (msgId: string) => {
+    longPressTimerRef.current = setTimeout(() => {
+      setShowEmojiPicker(prev => (prev === msgId ? null : msgId));
+    }, 500);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+  };
 
   // 1. Listen to latest message in Global Chat for sidebar preview
   useEffect(() => {
@@ -261,6 +380,27 @@ export const ChatLayout: React.FC = () => {
       });
       setMessages(msgList);
       setLoadingMessages(false);
+
+      if (!isGlobal && currentUser) {
+        const hasUnread = msgList.some(
+          m => m.senderId !== currentUser.uid && (!m.readBy || !m.readBy.includes(currentUser.uid))
+        );
+        if (hasUnread) {
+          markConversationRead(activeConversation.id, currentUser.uid).catch(() => {});
+        }
+      }
+
+      if (
+        msgList.length > lastMessageCountRef.current &&
+        lastMessageCountRef.current > 0 &&
+        (document.visibilityState === 'hidden' || !document.hasFocus())
+      ) {
+        const latest = msgList[msgList.length - 1];
+        if (latest && latest.senderId !== currentUser.uid) {
+          playNotificationChime();
+        }
+      }
+      lastMessageCountRef.current = msgList.length;
     }, (error) => {
       console.error('Error listening to messages:', error);
       setLoadingMessages(false);
@@ -362,6 +502,7 @@ export const ChatLayout: React.FC = () => {
         await editMessage(activeConversation.id, editingMessageState.id, inputText.trim());
         setEditingMessageState(null);
         setInputText('');
+        localStorage.removeItem(`chat_draft_${activeConversation.id}`);
       } catch (err: any) {
         setSendError(err.message || 'Failed to edit message.');
       } finally {
@@ -372,6 +513,7 @@ export const ChatLayout: React.FC = () => {
 
     const textToSend = inputText.trim();
     setInputText('');
+    localStorage.removeItem(`chat_draft_${activeConversation.id}`);
     const reply = replyingTo;
     setReplyingTo(null);
 
@@ -445,6 +587,33 @@ export const ChatLayout: React.FC = () => {
     } finally {
       setUploadingProgress(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleCameraCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userProfile) return;
+
+    setUploadingProgress(10);
+    setSendError(null);
+
+    try {
+      const url = await uploadMediaFile(file, `camera_${Date.now()}.jpg`, (progress) => {
+        setUploadingProgress(progress);
+      });
+
+      await sendMessage(activeConversation, userProfile, 'Camera photo', 'image', {
+        mediaUrl: url,
+        fileName: `Photo_${new Date().toLocaleTimeString()}.jpg`,
+        fileSize: file.size
+      });
+    } catch (err: any) {
+      setSendError('Camera capture upload failed.');
+    } finally {
+      setUploadingProgress(null);
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
     }
   };
 
@@ -534,6 +703,9 @@ export const ChatLayout: React.FC = () => {
     emerald: 'bg-emerald-950/20 dark:bg-[#04140d]',
     cyber: 'bg-purple-950/20 dark:bg-[#11071d]',
     warm: 'bg-amber-950/20 dark:bg-[#180e04]',
+    obsidian: 'bg-neutral-950',
+    carbon: 'bg-zinc-950',
+    aurora: 'bg-gradient-to-tr from-slate-950 via-indigo-950 to-slate-950',
   };
 
   const getConversationInfo = (conv: Conversation) => {
@@ -580,11 +752,11 @@ export const ChatLayout: React.FC = () => {
 
   const formatMessageTime = (ts?: number) => {
     if (!ts) return '';
-    return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] w-full overflow-hidden bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
+    <div className="flex h-[calc(100vh-4rem)] w-full overflow-hidden bg-[#F8F9FA] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
       
       {/* Network offline banner */}
       {!isOnline && (
@@ -597,7 +769,7 @@ export const ChatLayout: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       {/* 1. LEFT SIDEBAR: Conversations List                           */}
       {/* ------------------------------------------------------------- */}
-      <aside className={`w-full md:w-80 lg:w-88 flex flex-col border-r border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 backdrop-blur-md shrink-0 ${mobileView === 'chat' ? 'hidden md:flex' : 'flex'}`}>
+      <aside className={`w-full md:w-80 lg:w-88 flex flex-col border-r border-slate-200/80 dark:border-slate-800/80 bg-[#F8F9FA] dark:bg-slate-900/90 backdrop-blur-md shrink-0 ${mobileView === 'chat' ? 'hidden md:flex' : 'flex'}`}>
         
         {/* Sidebar Header */}
         <div className="p-3.5 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
@@ -784,8 +956,10 @@ export const ChatLayout: React.FC = () => {
                       alt={info.title}
                       className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700"
                     />
-                    {conv.type === 'direct' && info.isOnline && (
-                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
+                    {conv.type === 'direct' && (
+                      <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-slate-900 ${
+                        info.isOnline ? 'bg-emerald-500' : 'bg-slate-400'
+                      }`} />
                     )}
                   </div>
 
@@ -883,7 +1057,12 @@ export const ChatLayout: React.FC = () => {
               </div>
               
               <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                {activeConversation.id === GLOBAL_CHAT_ID ? (
+                {Object.keys(typingUsers).length > 0 ? (
+                  <div className="text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-1.5 animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+                    <span>{Object.values(typingUsers).join(', ')} {Object.keys(typingUsers).length > 1 ? 'are' : 'is'} typing...</span>
+                  </div>
+                ) : activeConversation.id === GLOBAL_CHAT_ID ? (
                   <span className="text-indigo-600 dark:text-indigo-400 font-medium">
                     Messages broadcast in real-time to all users
                   </span>
@@ -903,7 +1082,7 @@ export const ChatLayout: React.FC = () => {
           {/* Chat Action Icons */}
           <div className="flex items-center gap-1 sm:gap-2">
             <button
-              onClick={() => setActiveCall({ type: 'audio', partnerName: activeInfo.title, partnerAvatar: activeInfo.avatar || userProfile?.photoURL || '', startTime: Date.now() })}
+              onClick={() => startCall('audio')}
               title="Start Audio Call"
               className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
@@ -911,7 +1090,7 @@ export const ChatLayout: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setActiveCall({ type: 'video', partnerName: activeInfo.title, partnerAvatar: activeInfo.avatar || userProfile?.photoURL || '', startTime: Date.now() })}
+              onClick={() => startCall('video')}
               title="Start Video Call"
               className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
@@ -1055,7 +1234,15 @@ export const ChatLayout: React.FC = () => {
                     )}
 
                     {/* Bubble Container */}
-                    <div className="relative">
+                    <div 
+                      className="relative select-none"
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setShowEmojiPicker(showEmojiPicker === msg.id ? null : msg.id);
+                      }}
+                      onTouchStart={() => handleTouchStart(msg.id)}
+                      onTouchEnd={handleTouchEnd}
+                    >
                       
                       {/* Reply Reference Header */}
                       {msg.replyTo && !isDeleted && (
@@ -1158,11 +1345,19 @@ export const ChatLayout: React.FC = () => {
                           
                           {/* Read / Delivered Checkmarks */}
                           {isMe && !isDeleted && (
-                            <span>
-                              {msg.readBy && msg.readBy.length > 1 ? (
-                                <span title="Read"><CheckCheck className="w-3 h-3 text-cyan-300" /></span>
+                            <span className="flex items-center gap-0.5">
+                              {activeConversation.id === GLOBAL_CHAT_ID ? (
+                                <span title="Sent"><CheckCheck className="w-3 h-3 text-indigo-300" /></span>
+                              ) : msg.readBy && msg.readBy.length > 1 ? (
+                                <span title="Seen by recipient" className="flex items-center gap-0.5 text-cyan-200 font-medium">
+                                  <CheckCheck className="w-3 h-3 text-cyan-300 animate-in fade-in" />
+                                  <span className="text-[8px] uppercase tracking-wider">Seen</span>
+                                </span>
                               ) : (
-                                <span title="Delivered"><CheckCheck className="w-3 h-3 text-indigo-300" /></span>
+                                <span title="Delivered" className="flex items-center gap-0.5 text-indigo-200 opacity-80">
+                                  <CheckCheck className="w-3 h-3 text-indigo-300" />
+                                  <span className="text-[8px] uppercase tracking-wider">Delivered</span>
+                                </span>
                               )}
                             </span>
                           )}
@@ -1362,7 +1557,30 @@ export const ChatLayout: React.FC = () => {
                 className="hidden"
               />
 
+              {/* Camera Capture Input (hidden) */}
+              <input
+                type="file"
+                ref={cameraInputRef}
+                onChange={handleCameraCapture}
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+              />
+
               <div className="flex items-center gap-0.5 text-slate-400 pb-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (cameraInputRef.current) {
+                      cameraInputRef.current.click();
+                    }
+                  }}
+                  title="Take photo with camera"
+                  className="p-2 rounded-xl hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  <Camera className="w-4 h-4" />
+                </button>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -1740,6 +1958,16 @@ export const ChatLayout: React.FC = () => {
 
           </div>
         </div>
+      )}
+
+      {/* Media Viewer Modal Lightbox */}
+      {mediaViewer && (
+        <MediaViewerModal
+          mediaUrl={mediaViewer.url}
+          type={mediaViewer.type}
+          fileName={mediaViewer.fileName}
+          onClose={() => setMediaViewer(null)}
+        />
       )}
 
     </div>

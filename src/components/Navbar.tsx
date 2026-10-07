@@ -54,9 +54,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span className="font-extrabold text-sm tracking-tight text-white uppercase font-mono">
             CHATPRO
           </span>
-          <span className="hidden sm:inline-block px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-[9px] font-mono text-neutral-400">
-            FLUID_V2
-          </span>
         </div>
 
         {/* Center: Navigation Links */}
@@ -141,7 +138,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-full text-neutral-600 hover:text-black dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+            className="relative z-50 pointer-events-auto p-2 rounded-full text-neutral-600 hover:text-black dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
             {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-neutral-800" />}

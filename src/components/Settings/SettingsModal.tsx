@@ -89,6 +89,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     { id: 'emerald', name: 'Emerald Forest', bgClass: 'bg-emerald-950' },
     { id: 'cyber', name: 'Cyber Purple', bgClass: 'bg-purple-950' },
     { id: 'warm', name: 'Warm Amber', bgClass: 'bg-amber-950' },
+    { id: 'obsidian', name: 'Obsidian Dots', bgClass: 'bg-neutral-950' },
+    { id: 'carbon', name: 'Carbon Grid', bgClass: 'bg-zinc-950' },
+    { id: 'aurora', name: 'Aurora Dark', bgClass: 'bg-gradient-to-tr from-slate-950 via-indigo-950 to-slate-950' },
   ];
 
   return (

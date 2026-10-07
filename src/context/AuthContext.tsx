@@ -8,6 +8,7 @@ import {
   sendPasswordResetEmail,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
   signInAnonymously,
   updateProfile as updateAuthProfile
 } from 'firebase/auth';
@@ -274,11 +275,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const loginWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
     try {
-      const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (err: any) {
-      if (err.code !== 'auth/popup-closed-by-user') {
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request' || err.code === 'auth/unauthorized-domain') {
+        try {
+          await signInWithRedirect(auth, provider);
+        } catch (redirectErr: any) {
+          throw new Error(redirectErr.message || 'Google sign in failed.');
+        }
+      } else {
         throw new Error(err.message || 'Google sign in failed.');
       }
     }
