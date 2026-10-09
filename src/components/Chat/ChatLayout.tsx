@@ -530,7 +530,7 @@ export const ChatLayout: React.FC = () => {
       if (currentUser && userProfile) {
         updateTypingStatus(activeConversation.id, currentUser.uid, userProfile.displayName, false);
       }
-    }, 2500);
+    }, 250000);
   };
 
   // Send message handler
@@ -554,8 +554,8 @@ export const ChatLayout: React.FC = () => {
       return;
     }
 
-    if (inputText.trim().length > 2500) {
-      setSendError('Message exceeds 2,500 characters.');
+    if (inputText.trim().length > 250000) {
+      setSendError('Message exceeds 2,50000 characters.');
       return;
     }
 
