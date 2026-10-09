@@ -15,6 +15,13 @@ const AppContent: React.FC = () => {
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
   const [adminModalOpen, setAdminModalOpen] = useState(false);
 
+  React.useEffect(() => {
+    if (currentUser) {
+      setCurrentView('chat');
+      setAuthModalOpen(false);
+    }
+  }, [currentUser]);
+
   // If user is logged in and lands, auto switch to chat if requested
   const handleOpenChat = () => {
     if (!currentUser) {
@@ -44,7 +51,7 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#000000] text-white font-sans selection:bg-white selection:text-black">
+    <div className={`w-full flex flex-col bg-[#000000] text-white font-sans selection:bg-white selection:text-black ${currentView === 'chat' ? 'h-[100dvh] min-h-[100dvh] overflow-hidden' : 'min-h-screen'}`}>
       
       {/* Main View Switching */}
       <div className="flex-1 flex flex-col">

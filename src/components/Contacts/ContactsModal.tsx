@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { searchRegisteredUsers, subscribeToAllRegisteredUsers } from '../../services/chatService';
-import { UserProfile } from '../../types';
+import { UserProfile, getPresenceStatus, getPresenceDotClass } from '../../types';
 
 interface ContactsModalProps {
   isOpen: boolean;
@@ -136,7 +136,8 @@ export const ContactsModal: React.FC<ContactsModalProps> = ({
             </div>
           ) : (
             users.map((user) => {
-              const isUserOnline = user.status === 'online';
+              const presenceStatus = getPresenceStatus(user);
+              const dotClass = getPresenceDotClass(presenceStatus);
 
               return (
                 <div
@@ -151,9 +152,7 @@ export const ContactsModal: React.FC<ContactsModalProps> = ({
                         className="w-11 h-11 rounded-full object-cover border border-slate-200 dark:border-slate-700"
                       />
                       <span
-                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${
-                          isUserOnline ? 'bg-emerald-500' : 'bg-slate-400'
-                        }`}
+                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${dotClass}`}
                       />
                     </div>
 
@@ -175,12 +174,14 @@ export const ContactsModal: React.FC<ContactsModalProps> = ({
                         </span>
                         <span>•</span>
                         <span className="flex items-center gap-1 text-[11px]">
-                          {isUserOnline ? (
+                          {presenceStatus === 'online' ? (
                             <span className="text-emerald-600 dark:text-emerald-400 font-medium">Online</span>
+                          ) : presenceStatus === 'away' ? (
+                            <span className="text-amber-600 dark:text-amber-400 font-medium">Away</span>
                           ) : (
                             <>
                               <Clock className="w-3 h-3" />
-                              <span>Last seen {formatLastSeen(user.lastSeen)}</span>
+                              <span>Offline ({formatLastSeen(user.lastSeen)})</span>
                             </>
                           )}
                         </span>

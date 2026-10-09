@@ -60,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Update presence status helper
-  const setPresence = useCallback(async (uid: string, status: 'online' | 'offline') => {
+  const setPresence = useCallback(async (uid: string, status: 'online' | 'offline' | 'away') => {
     try {
       const userRef = doc(db, 'users', uid);
       await updateDoc(userRef, {
@@ -168,20 +168,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [setPresence]);
 
-  // Presence heartbeat & tab blur/close handlers
+  // Presence heartbeat, idle detection (away), & tab blur/close handlers
   useEffect(() => {
     if (!currentUser) return;
 
-    const interval = setInterval(() => {
-      if (document.visibilityState === 'visible') {
+    let lastActivityTime = Date.now();
+    let isAway = false;
+
+    const checkActivity = () => {
+      const now = Date.now();
+      const idleTime = now - lastActivityTime;
+      // 3 minutes idle -> away
+      if (idleTime > 180000 && !isAway && document.visibilityState === 'visible') {
+        isAway = true;
+        setPresence(currentUser.uid, 'away');
+      }
+    };
+
+    const handleUserActivity = () => {
+      lastActivityTime = Date.now();
+      if (isAway && document.visibilityState === 'visible') {
+        isAway = false;
         setPresence(currentUser.uid, 'online');
       }
-    }, 60000);
+    };
+
+    const interval = setInterval(checkActivity, 30000);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         setPresence(currentUser.uid, 'offline');
       } else {
+        lastActivityTime = Date.now();
+        isAway = false;
         setPresence(currentUser.uid, 'online');
       }
     };
@@ -190,11 +209,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setPresence(currentUser.uid, 'offline');
     };
 
+    window.addEventListener('mousemove', handleUserActivity);
+    window.addEventListener('keydown', handleUserActivity);
+    window.addEventListener('click', handleUserActivity);
+    window.addEventListener('scroll', handleUserActivity);
+    window.addEventListener('touchstart', handleUserActivity);
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
       clearInterval(interval);
+      window.removeEventListener('mousemove', handleUserActivity);
+      window.removeEventListener('keydown', handleUserActivity);
+      window.removeEventListener('click', handleUserActivity);
+      window.removeEventListener('scroll', handleUserActivity);
+      window.removeEventListener('touchstart', handleUserActivity);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };

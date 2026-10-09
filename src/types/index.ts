@@ -37,7 +37,7 @@ export interface UserProfile {
   isAnonymous?: boolean;
   bio?: string;
   photoURL?: string;
-  status?: 'online' | 'offline';
+  status?: 'online' | 'offline' | 'away';
   lastSeen?: string; // ISO string
   createdAt?: string;
   role?: UserRole;
@@ -156,3 +156,26 @@ export interface Report {
   status: 'pending' | 'resolved' | 'dismissed';
   createdAt: number;
 }
+
+export const getPresenceStatus = (user?: { status?: string; lastSeen?: string }): 'online' | 'away' | 'offline' => {
+  if (!user) return 'offline';
+  if (user.status === 'offline') return 'offline';
+  if (user.status === 'away') return 'away';
+
+  if (user.lastSeen) {
+    const diffMs = Date.now() - new Date(user.lastSeen).getTime();
+    if (diffMs > 15 * 60 * 1000) return 'offline';
+    if (diffMs > 2 * 60 * 1000) return 'away';
+  }
+
+  return user.status === 'online' ? 'online' : 'offline';
+};
+
+export const getPresenceDotClass = (status: 'online' | 'away' | 'offline'): string => {
+  switch (status) {
+    case 'online': return 'bg-emerald-500';
+    case 'away': return 'bg-amber-500';
+    case 'offline': return 'bg-slate-400';
+  }
+};
+

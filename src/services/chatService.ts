@@ -809,3 +809,23 @@ export const fetchAuditLogs = async (): Promise<AuditLog[]> => {
   }
 };
 
+export const deleteConversation = async (conversationId: string, currentUid: string): Promise<void> => {
+  if (conversationId === GLOBAL_CHAT_ID) return;
+  const convRef = doc(db, 'conversations', conversationId);
+  try {
+    const snap = await getDoc(convRef);
+    if (snap.exists()) {
+      const conv = snap.data() as Conversation;
+      if (conv.type === 'direct') {
+        await deleteDoc(convRef);
+      } else {
+        await updateDoc(convRef, {
+          participants: arrayRemove(currentUid)
+        });
+      }
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `conversations/${conversationId}`);
+  }
+};
+

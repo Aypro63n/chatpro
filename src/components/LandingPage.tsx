@@ -137,7 +137,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
 
   return (
     <div ref={containerRef} className="w-full bg-[#FFFFFF] text-neutral-900 font-sans selection:bg-black selection:text-white overflow-x-hidden relative">
-      
+
       {/* Minimal Premium Navbar */}
       <header className="sticky top-4 z-50 w-full px-4 sm:px-6 max-w-6xl mx-auto font-sans">
         <div className="rounded-full border border-neutral-200 bg-white/80 backdrop-blur-2xl shadow-[0_10px_30px_rgba(0,0,0,0.06)] px-5 sm:px-8 h-14 flex items-center justify-between transition-all">

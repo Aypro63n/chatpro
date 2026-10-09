@@ -64,7 +64,9 @@ import {
   UserProfile, 
   MessageType, 
   ReplyReference,
-  GLOBAL_CHAT_ID 
+  GLOBAL_CHAT_ID,
+  getPresenceStatus,
+  getPresenceDotClass
 } from '../../types';
 import { 
   getGlobalChatConversation,
@@ -79,7 +81,8 @@ import {
   submitReport,
   getOrCreateDirectConversation,
   blockUser,
-  unblockUser
+  unblockUser,
+  deleteConversation
 } from '../../services/chatService';
 import { VoiceRecorder } from './VoiceRecorder';
 import { MediaViewerModal } from './MediaViewerModal';
@@ -87,6 +90,32 @@ import { CreateGroupModal } from './CreateGroupModal';
 import { ContactsModal } from '../Contacts/ContactsModal';
 import { SettingsModal } from '../Settings/SettingsModal';
 import { AdminPanelModal } from '../Admin/AdminPanelModal';
+
+const ConversationSkeleton = () => (
+  <div className="p-3 flex items-start gap-3 animate-pulse">
+    <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
+    <div className="flex-1 space-y-2 py-1">
+      <div className="h-3.5 bg-slate-200 dark:bg-slate-800 rounded w-3/4" />
+      <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/2" />
+    </div>
+  </div>
+);
+
+const MessageSkeleton = () => (
+  <div className="space-y-4 py-4 animate-pulse px-2">
+    <div className="flex items-start gap-3">
+      <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
+      <div className="p-3 rounded-2xl bg-slate-200 dark:bg-slate-800 w-48 h-12 rounded-bl-xs" />
+    </div>
+    <div className="flex items-start justify-end gap-3">
+      <div className="p-3 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 w-64 h-16 rounded-br-xs" />
+    </div>
+    <div className="flex items-start gap-3">
+      <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
+      <div className="p-3 rounded-2xl bg-slate-200 dark:bg-slate-800 w-36 h-10 rounded-bl-xs" />
+    </div>
+  </div>
+);
 
 export const ChatLayout: React.FC = () => {
   const { currentUser, userProfile, isOwner, isAdmin, isMaintainer, isOnline } = useAuth();
@@ -119,6 +148,9 @@ export const ChatLayout: React.FC = () => {
 
   // Media preview modal
   const [mediaViewer, setMediaViewer] = useState<{ url: string; type: 'image' | 'video'; fileName: string } | null>(null);
+  const [conversationToDelete, setConversationToDelete] = useState<Conversation | null>(null);
+  const [isDeletingConv, setIsDeletingConv] = useState(false);
+  const [deleteFeedback, setDeleteFeedback] = useState<string | null>(null);
 
   // Message composer states
   const [inputText, setInputText] = useState('');
@@ -283,6 +315,8 @@ export const ChatLayout: React.FC = () => {
   const typingTimeoutRef = useRef<any>(null);
   const lastSendTimeRef = useRef<number>(0);
   const longPressTimerRef = useRef<any>(null);
+  const lastGlobalMsgIdRef = useRef<string | null>(null);
+  const convUpdatedAtMapRef = useRef<Record<string, number>>({});
 
   const handleTouchStart = (msgId: string) => {
     longPressTimerRef.current = setTimeout(() => {
@@ -294,7 +328,7 @@ export const ChatLayout: React.FC = () => {
     if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
   };
 
-  // 1. Listen to latest message in Global Chat for sidebar preview
+  // 1. Listen to latest message in Global Chat for sidebar preview & notification sound
   useEffect(() => {
     const q = query(
       collection(db, 'globalMessages'),
@@ -304,15 +338,31 @@ export const ChatLayout: React.FC = () => {
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       if (!snapshot.empty) {
-        const msg = snapshot.docs[0].data() as Message;
+        const docSnap = snapshot.docs[0];
+        const msg = docSnap.data() as Message;
         setGlobalLastMessage(msg);
+
+        if (
+          lastGlobalMsgIdRef.current &&
+          lastGlobalMsgIdRef.current !== docSnap.id &&
+          currentUser &&
+          msg.senderId !== currentUser.uid &&
+          (document.visibilityState === 'hidden' || !document.hasFocus() || activeConversation.id !== GLOBAL_CHAT_ID)
+        ) {
+          playNotificationChime();
+        }
+        lastGlobalMsgIdRef.current = docSnap.id;
+      } else {
+        if (!lastGlobalMsgIdRef.current && !snapshot.empty) {
+          lastGlobalMsgIdRef.current = snapshot.docs[0].id;
+        }
       }
     }, () => {});
 
     return () => unsubscribe();
-  }, []);
+  }, [currentUser, activeConversation.id]);
 
-  // 2. Listen to all private & group conversations for current user
+  // 2. Listen to all private & group conversations for current user & notification sound
   useEffect(() => {
     if (!currentUser) return;
 
@@ -325,7 +375,23 @@ export const ChatLayout: React.FC = () => {
     const unsubscribe = onSnapshot(convsQuery, (snapshot) => {
       const list: Conversation[] = [];
       snapshot.forEach((docSnap) => {
-        list.push(docSnap.data() as Conversation);
+        const conv = docSnap.data() as Conversation;
+        list.push(conv);
+
+        const prevUpdatedAt = convUpdatedAtMapRef.current[conv.id] || 0;
+        if (
+          prevUpdatedAt > 0 &&
+          conv.updatedAt &&
+          conv.updatedAt > prevUpdatedAt &&
+          conv.lastMessage?.senderId &&
+          conv.lastMessage.senderId !== currentUser.uid &&
+          (document.visibilityState === 'hidden' || !document.hasFocus() || activeConversation.id !== conv.id)
+        ) {
+          playNotificationChime();
+        }
+        if (conv.updatedAt) {
+          convUpdatedAtMapRef.current[conv.id] = conv.updatedAt;
+        }
       });
       list.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
       setConversations(list);
@@ -343,7 +409,7 @@ export const ChatLayout: React.FC = () => {
     });
 
     return () => unsubscribe();
-  }, [currentUser]);
+  }, [currentUser, activeConversation.id]);
 
   // 3. Listen to messages and typing indicator when activeConversation changes
   useEffect(() => {
@@ -714,7 +780,7 @@ export const ChatLayout: React.FC = () => {
         title: 'Global Chat',
         subtitle: 'Public room • All members',
         avatar: '',
-        isOnline: true,
+        presenceStatus: 'online' as const,
         lastSeen: ''
       };
     }
@@ -723,27 +789,26 @@ export const ChatLayout: React.FC = () => {
         title: conv.name || 'Group Chat',
         subtitle: `${conv.participants.length} members`,
         avatar: conv.photoURL || `https://api.dicebear.com/7.x/identicon/svg?seed=${conv.name}`,
-        isOnline: false,
+        presenceStatus: 'offline' as const,
         lastSeen: ''
       };
     }
 
     const otherParticipant = Object.values(conv.participantData || {}).find(p => p.uid !== currentUser?.uid);
-    const isTargetOnline = otherUserProfile && otherUserProfile.uid === otherParticipant?.uid 
-      ? otherUserProfile.status === 'online' 
-      : false;
+    const targetUser = otherUserProfile && otherUserProfile.uid === otherParticipant?.uid ? otherUserProfile : null;
+    const presenceStatus = getPresenceStatus(targetUser || { lastSeen: '', status: 'offline' });
 
     return {
       title: otherParticipant?.displayName || 'User',
-      subtitle: `@${otherParticipant?.username || 'user'}`,
+      subtitle: presenceStatus === 'online' ? 'Online' : presenceStatus === 'away' ? 'Away' : 'Offline',
       avatar: otherParticipant?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherParticipant?.username || 'avatar'}`,
-      isOnline: isTargetOnline,
-      lastSeen: otherUserProfile?.lastSeen || ''
+      presenceStatus,
+      lastSeen: targetUser?.lastSeen || ''
     };
   };
 
   const activeInfo = getConversationInfo(activeConversation);
-  const pinnedMessage = messages.find((m) => m.id === activeConversation.pinnedMessageId);
+  const pinnedMessage = messages.find((m) => m.id === activeConversation.pinnedMessageId || m.pinned);
 
   const directPartner = activeConversation.type === 'direct'
     ? Object.values(activeConversation.participantData || {}).find(p => p.uid !== currentUser?.uid)
@@ -756,7 +821,7 @@ export const ChatLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] w-full overflow-hidden bg-[#F8F9FA] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
+    <div className="h-[100dvh] min-h-[100dvh] w-full flex overflow-hidden bg-[#F8F9FA] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
       
       {/* Network offline banner */}
       {!isOnline && (
@@ -874,10 +939,10 @@ export const ChatLayout: React.FC = () => {
           {/* ALWAYS PINNED AT THE TOP: GLOBAL CHAT */}
           <div
             onClick={() => { setActiveConversation(getGlobalChatConversation()); setMobileView('chat'); }}
-            className={`p-3 flex items-start gap-3 cursor-pointer transition-all border-b border-indigo-100/80 dark:border-indigo-950/50 ${
+            className={`mx-2 my-1.5 p-3.5 flex items-center gap-3.5 cursor-pointer transition-all rounded-2xl border ${
               activeConversation.id === GLOBAL_CHAT_ID 
-                ? 'bg-indigo-50/90 dark:bg-indigo-950/40 border-l-4 border-l-indigo-600' 
-                : 'bg-indigo-50/30 dark:bg-indigo-950/15 hover:bg-indigo-50/60 dark:hover:bg-indigo-950/30'
+                ? 'bg-indigo-600/15 border-indigo-500/30 shadow-sm ring-1 ring-indigo-500/20 text-white' 
+                : 'bg-indigo-50/40 dark:bg-indigo-950/20 border-indigo-200/40 dark:border-indigo-900/40 hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40'
             }`}
           >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/20">
@@ -918,9 +983,10 @@ export const ChatLayout: React.FC = () => {
 
           {/* User's DMs & Group Chats */}
           {loadingConversations ? (
-            <div className="p-8 text-center text-xs text-slate-400 flex flex-col items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
-              <span>Loading conversations...</span>
+            <div className="py-2 space-y-1">
+              <ConversationSkeleton />
+              <ConversationSkeleton />
+              <ConversationSkeleton />
             </div>
           ) : filteredConversations.length === 0 ? (
             <div className="p-6 text-center text-slate-400">
@@ -944,10 +1010,10 @@ export const ChatLayout: React.FC = () => {
                 <div
                   key={conv.id}
                   onClick={() => { setActiveConversation(conv); setMobileView('chat'); }}
-                  className={`p-3 flex items-start gap-3 cursor-pointer transition-colors ${
+                  className={`mx-2 my-1.5 p-3.5 flex items-center gap-3.5 cursor-pointer transition-all rounded-2xl group relative ${
                     isSelected 
-                      ? 'bg-slate-100 dark:bg-slate-800/90 border-l-4 border-l-indigo-600' 
-                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                      ? 'bg-indigo-600/15 border border-indigo-500/30 shadow-sm ring-1 ring-indigo-500/20 text-white' 
+                      : 'hover:bg-slate-100/80 dark:hover:bg-slate-800/60 border border-transparent'
                   }`}
                 >
                   <div className="relative shrink-0">
@@ -958,7 +1024,7 @@ export const ChatLayout: React.FC = () => {
                     />
                     {conv.type === 'direct' && (
                       <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-slate-900 ${
-                        info.isOnline ? 'bg-emerald-500' : 'bg-slate-400'
+                        getPresenceDotClass(info.presenceStatus)
                       }`} />
                     )}
                   </div>
@@ -968,11 +1034,23 @@ export const ChatLayout: React.FC = () => {
                       <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
                         {info.title}
                       </h4>
-                      {conv.lastMessage && (
-                        <span className="text-[10px] text-slate-400 font-mono shrink-0">
-                          {formatMessageTime(conv.lastMessage.createdAt || conv.lastMessage.timestamp)}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {conv.lastMessage && (
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {formatMessageTime(conv.lastMessage.createdAt || conv.lastMessage.timestamp)}
+                          </span>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConversationToDelete(conv);
+                          }}
+                          title="Delete Conversation"
+                          className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-all cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="flex items-center justify-between">
@@ -1036,8 +1114,10 @@ export const ChatLayout: React.FC = () => {
                   className="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-slate-700"
                 />
               )}
-              {activeConversation.type === 'direct' && activeInfo.isOnline && (
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
+              {activeConversation.type === 'direct' && (
+                <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-slate-900 ${
+                  getPresenceDotClass(activeInfo.presenceStatus)
+                }`} />
               )}
             </div>
 
@@ -1067,10 +1147,12 @@ export const ChatLayout: React.FC = () => {
                     Messages broadcast in real-time to all users
                   </span>
                 ) : activeConversation.type === 'direct' ? (
-                  activeInfo.isOnline ? (
+                  activeInfo.presenceStatus === 'online' ? (
                     <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Online</span>
+                  ) : activeInfo.presenceStatus === 'away' ? (
+                    <span className="text-amber-600 dark:text-amber-400 font-semibold">Away</span>
                   ) : (
-                    <span>Last seen recently</span>
+                    <span>Offline</span>
                   )
                 ) : (
                   <span>{activeInfo.subtitle}</span>
@@ -1281,7 +1363,7 @@ export const ChatLayout: React.FC = () => {
                                 <img
                                   src={msg.mediaUrl}
                                   alt={msg.fileName || 'Photo'}
-                                  className="max-h-60 w-auto rounded-xl object-cover hover:scale-102 transition-transform"
+                                  className="max-w-[260px] sm:max-w-xs max-h-56 w-full h-auto rounded-xl object-cover hover:scale-102 transition-transform"
                                 />
                               </div>
                             )}
@@ -1440,14 +1522,16 @@ export const ChatLayout: React.FC = () => {
                             </button>
                           )}
 
-                          {/* Delete */}
-                          <button
-                            onClick={() => handleDelete(msg, isMe || isOwner || isAdmin || isMaintainer)}
-                            title={isMe || isOwner || isAdmin || isMaintainer ? 'Delete message' : 'Delete for me'}
-                            className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-700"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
+                          {/* Delete (own message or admin/owner/maintainer) */}
+                          {(isMe || isOwner || isAdmin || isMaintainer) && (
+                            <button
+                              onClick={() => handleDelete(msg, true)}
+                              title="Delete message"
+                              className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
 
                         </div>
                       )}
@@ -1521,7 +1605,7 @@ export const ChatLayout: React.FC = () => {
         )}
 
         {/* Bottom Input Composer */}
-        <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800/80 shrink-0">
+        <div className="sticky bottom-0 left-0 right-0 z-20 p-3 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800/80 shrink-0 pb-safe pb-4">
           
           {isDirectPartnerBlocked ? (
             <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -1547,7 +1631,7 @@ export const ChatLayout: React.FC = () => {
               onCancel={() => setShowVoiceRecorder(false)}
             />
           ) : (
-            <form onSubmit={handleSendMessage} className="flex items-end gap-2">
+            <form onSubmit={handleSendMessage} className="flex items-center gap-2 px-2.5 sm:px-4 py-2.5 sm:py-3 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800/80">
               
               {/* File Attachment Input (hidden) */}
               <input
@@ -1567,7 +1651,8 @@ export const ChatLayout: React.FC = () => {
                 className="hidden"
               />
 
-              <div className="flex items-center gap-0.5 text-slate-400 pb-1">
+              {/* Visually distinct attachment buttons container */}
+              <div className="flex items-center gap-0.5 sm:gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 text-slate-500 dark:text-slate-400 shrink-0">
                 <button
                   type="button"
                   onClick={() => {
@@ -1576,9 +1661,9 @@ export const ChatLayout: React.FC = () => {
                     }
                   }}
                   title="Take photo with camera"
-                  className="p-2 rounded-xl hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="p-1.5 sm:p-2 rounded-xl hover:bg-white dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer shadow-2xs"
                 >
-                  <Camera className="w-4 h-4" />
+                  <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
 
                 <button
@@ -1590,9 +1675,9 @@ export const ChatLayout: React.FC = () => {
                     }
                   }}
                   title="Send photo or video"
-                  className="p-2 rounded-xl hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="p-1.5 sm:p-2 rounded-xl hover:bg-white dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer shadow-2xs"
                 >
-                  <ImageIcon className="w-4 h-4" />
+                  <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
 
                 <button
@@ -1604,23 +1689,23 @@ export const ChatLayout: React.FC = () => {
                     }
                   }}
                   title="Attach document or file"
-                  className="p-2 rounded-xl hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="p-1.5 sm:p-2 rounded-xl hover:bg-white dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer shadow-2xs"
                 >
-                  <Paperclip className="w-4 h-4" />
+                  <Paperclip className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
                 
                 <button
                   type="button"
                   onClick={() => setShowVoiceRecorder(true)}
                   title="Record voice message"
-                  className="p-2 rounded-xl hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="p-1.5 sm:p-2 rounded-xl hover:bg-white dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer shadow-2xs"
                 >
-                  <Mic className="w-4 h-4" />
+                  <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               </div>
 
               {/* Textarea: Enter to send, Shift+Enter for newline */}
-              <div className="flex-1 relative">
+              <div className="flex-1 min-w-0 relative">
                 <textarea
                   rows={1}
                   value={inputText}
@@ -1631,8 +1716,8 @@ export const ChatLayout: React.FC = () => {
                       handleSendMessage();
                     }
                   }}
-                  placeholder={activeConversation.id === GLOBAL_CHAT_ID ? "Broadcast to Global Chat... (Enter to send)" : "Type your message... (Enter to send)"}
-                  className="w-full max-h-32 py-2 px-3.5 bg-slate-100/90 dark:bg-slate-800/80 border border-transparent focus:border-indigo-500/50 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none resize-none transition-colors"
+                  placeholder={activeConversation.id === GLOBAL_CHAT_ID ? "Broadcast..." : "Type message..."}
+                  className="w-full max-h-32 py-2 sm:py-2.5 px-3 sm:px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 focus:border-indigo-500 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none resize-none transition-all shadow-inner"
                 />
               </div>
 
@@ -1640,7 +1725,7 @@ export const ChatLayout: React.FC = () => {
               <button
                 type="submit"
                 disabled={!inputText.trim() || sendingMessage}
-                className="p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white shadow-md shadow-indigo-600/20 transition-all shrink-0 cursor-pointer disabled:cursor-not-allowed"
+                className="p-2.5 sm:p-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white shadow-md shadow-indigo-600/20 transition-all shrink-0 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center"
                 title="Send message"
               >
                 {sendingMessage ? (
@@ -1968,6 +2053,61 @@ export const ChatLayout: React.FC = () => {
           fileName={mediaViewer.fileName}
           onClose={() => setMediaViewer(null)}
         />
+      )}
+
+      {/* Delete Conversation Confirmation Modal */}
+      {conversationToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in font-sans">
+          <div className="w-full max-w-sm rounded-3xl bg-slate-900 border border-slate-800 p-6 text-white shadow-2xl">
+            <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center mb-4">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-bold text-white mb-1">Delete Conversation?</h3>
+            <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+              Are you sure you want to delete this conversation with <span className="font-semibold text-slate-200">{getConversationInfo(conversationToDelete).title}</span>? This action cannot be undone.
+            </p>
+            {deleteFeedback && (
+              <div className="mb-4 p-2.5 rounded-xl bg-red-500/20 text-red-300 text-xs font-medium">
+                {deleteFeedback}
+              </div>
+            )}
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => { setConversationToDelete(null); setDeleteFeedback(null); }}
+                disabled={isDeletingConv}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingConv}
+                onClick={async () => {
+                  try {
+                    setIsDeletingConv(true);
+                    setDeleteFeedback(null);
+                    await deleteConversation(conversationToDelete.id, currentUser!.uid);
+                    
+                    setConversations(prev => prev.filter(c => c.id !== conversationToDelete.id));
+                    if (activeConversation.id === conversationToDelete.id) {
+                      setActiveConversation(getGlobalChatConversation());
+                    }
+                    setConversationToDelete(null);
+                  } catch (err: any) {
+                    setDeleteFeedback(err.message || 'Failed to delete conversation.');
+                  } finally {
+                    setIsDeletingConv(false);
+                  }
+                }}
+                className="px-5 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-500 text-white transition-all cursor-pointer flex items-center gap-2 shadow-lg shadow-red-600/30"
+              >
+                {isDeletingConv && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>Delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>
