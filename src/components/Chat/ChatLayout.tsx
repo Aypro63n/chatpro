@@ -42,7 +42,8 @@ import {
   Image as ImageIcon,
   Sun,
   Moon,
-  Share2
+  Share2,
+  Copy
 } from 'lucide-react';
 import { 
   collection, 
@@ -311,6 +312,7 @@ export const ChatLayout: React.FC = () => {
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const typingTimeoutRef = useRef<any>(null);
   const lastSendTimeRef = useRef<number>(0);
@@ -513,10 +515,22 @@ export const ChatLayout: React.FC = () => {
     };
   }, [activeConversation.id, currentUser?.uid]);
 
-  // Scroll to bottom on message updates
+  // Scroll to bottom on message updates only if near bottom or sent by current user
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, typingUsers]);
+    if (!messagesEndRef.current) return;
+    const container = messagesContainerRef.current;
+    if (container) {
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
+      const lastMsg = messages[messages.length - 1];
+      const isMyMessage = lastMsg && lastMsg.senderId === currentUser?.uid;
+      
+      if (isNearBottom || isMyMessage) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, currentUser?.uid]);
 
   // Handle typing input
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -530,7 +544,7 @@ export const ChatLayout: React.FC = () => {
       if (currentUser && userProfile) {
         updateTypingStatus(activeConversation.id, currentUser.uid, userProfile.displayName, false);
       }
-    }, 250000);
+    }, 2500);
   };
 
   // Send message handler
@@ -554,8 +568,8 @@ export const ChatLayout: React.FC = () => {
       return;
     }
 
-    if (inputText.trim().length > 250000) {
-      setSendError('Message exceeds 2,50000 characters.');
+    if (inputText.trim().length > 500000) {
+      setSendError('Message exceeds 500,000 characters.');
       return;
     }
 
@@ -818,6 +832,28 @@ export const ChatLayout: React.FC = () => {
   const formatMessageTime = (ts?: number) => {
     if (!ts) return '';
     return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+  };
+
+  const renderMessageTextWithLinks = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    return parts.map((part, index) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:opacity-80 break-all font-medium text-inherit"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
   };
 
   return (
@@ -1266,7 +1302,7 @@ export const ChatLayout: React.FC = () => {
         )}
 
         {/* Messages Scroll Area */}
-        <div className={`flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 ${wallpaperClasses[wallpaper] || wallpaperClasses.default}`}>
+        <div ref={messagesContainerRef} className={`flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 ${wallpaperClasses[wallpaper] || wallpaperClasses.default}`}>
           {loadingMessages ? (
             <div className="py-20 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs">
               <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
@@ -1415,7 +1451,7 @@ export const ChatLayout: React.FC = () => {
 
                             {/* Text Body */}
                             {msg.type === 'text' && (
-                              <p className="whitespace-pre-wrap break-words">{msg.text || msg.content}</p>
+                              <p className="whitespace-pre-wrap break-words">{renderMessageTextWithLinks(msg.text || msg.content)}</p>
                             )}
                           </>
                         )}
@@ -1475,6 +1511,20 @@ export const ChatLayout: React.FC = () => {
                       {!isDeleted && (
                         <div className="absolute top-0 right-0 -translate-y-1/2 flex items-center gap-0.5 p-1 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md z-10 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                           
+                          {/* Quick Emojis */}
+                          <div className="flex items-center gap-0.5 px-1 border-r border-slate-200 dark:border-slate-700">
+                            {['❤️', '👍', '🔥', '😂'].map((emoji) => (
+                              <button
+                                key={emoji}
+                                onClick={() => handleReact(msg, emoji)}
+                                title={`React with ${emoji}`}
+                                className="p-1 hover:scale-125 transition-transform text-xs cursor-pointer"
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+
                           {/* Reply */}
                           <button
                             onClick={() => setReplyingTo({
@@ -1506,6 +1556,17 @@ export const ChatLayout: React.FC = () => {
                             className="p-1 rounded text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700"
                           >
                             <Pin className="w-3 h-3" />
+                          </button>
+
+                          {/* Copy */}
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(msg.text || msg.content || '');
+                            }}
+                            title="Copy text"
+                            className="p-1 rounded text-slate-400 hover:text-emerald-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+                          >
+                            <Copy className="w-3 h-3" />
                           </button>
 
                           {/* Edit (if own message and text) */}
@@ -1708,6 +1769,7 @@ export const ChatLayout: React.FC = () => {
               <div className="flex-1 min-w-0 relative">
                 <textarea
                   rows={1}
+                  maxLength={500000}
                   value={inputText}
                   onChange={handleInputChange}
                   onKeyDown={(e) => {

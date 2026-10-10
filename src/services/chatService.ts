@@ -829,3 +829,15 @@ export const deleteConversation = async (conversationId: string, currentUid: str
   }
 };
 
+export const markMessageAsRead = async (conversationId: string, messageId: string, uid: string): Promise<void> => {
+  const collPath = conversationId === GLOBAL_CHAT_ID ? 'globalMessages' : `conversations/${conversationId}/messages`;
+  const msgRef = doc(db, collPath, messageId);
+  try {
+    await updateDoc(msgRef, {
+      readBy: arrayUnion(uid)
+    });
+  } catch {
+    // Non-blocking read receipt update
+  }
+};
+
