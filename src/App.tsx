@@ -6,20 +6,36 @@ import { LandingPage } from './components/LandingPage';
 import { ChatLayout } from './components/Chat/ChatLayout';
 import { AuthModal } from './components/AuthModal';
 import { AdminPanelModal } from './components/Admin/AdminPanelModal';
+import { NotFoundPage } from './components/NotFoundPage';
 
 const AppContent: React.FC = () => {
   const { currentUser, loading } = useAuth();
   
-  const [currentView, setCurrentView] = useState<'landing' | 'chat'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'chat' | '404'>('landing');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
   const [adminModalOpen, setAdminModalOpen] = useState(false);
 
   React.useEffect(() => {
-    if (currentUser) {
+    if (currentUser && currentView !== '404') {
       setCurrentView('chat');
       setAuthModalOpen(false);
     }
+  }, [currentUser, currentView]);
+
+  React.useEffect(() => {
+    const handlePopState = () => {
+      // Basic path handling for 404 demonstration
+      if (window.location.pathname !== '/' && window.location.pathname !== '/chat') {
+        setCurrentView('404');
+      } else {
+        setCurrentView(currentUser ? 'chat' : 'landing');
+      }
+    };
+
+    handlePopState();
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, [currentUser]);
 
   // If user is logged in and lands, auto switch to chat if requested
@@ -55,6 +71,10 @@ const AppContent: React.FC = () => {
       
       {/* Main View Switching */}
       <div className="flex-1 flex flex-col">
+        {currentView === '404' && (
+          <NotFoundPage onGoHome={() => setCurrentView(currentUser ? 'chat' : 'landing')} />
+        )}
+
         {currentView === 'landing' && (
           <LandingPage
             onGetStarted={() => {

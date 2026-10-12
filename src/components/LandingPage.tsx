@@ -25,7 +25,10 @@ import {
   Eye,
   Bell,
   Camera,
-  FileText
+  FileText,
+  Menu,
+  X,
+  Phone
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -48,6 +51,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
 
   // Cinematic scroll parallax offset
   const [scrollY, setScrollY] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -136,7 +140,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
   const skylineOpacity = Math.max(0.05, 1 - scrollY * 0.001);
 
   return (
-    <div ref={containerRef} className="w-full bg-[#FFFFFF] text-neutral-900 font-sans selection:bg-black selection:text-white overflow-x-hidden relative">
+    <div ref={containerRef} className="max-w-[100vw] overflow-x-hidden bg-[#FFFFFF] text-neutral-900 font-sans selection:bg-black selection:text-white relative">
 
       {/* Minimal Premium Navbar */}
       <header className="sticky top-4 z-50 w-full px-4 sm:px-6 max-w-6xl mx-auto font-sans">
@@ -162,7 +166,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
             <button onClick={() => scrollTo('how-it-works')} className="hover:text-black transition-colors cursor-pointer">How It Works</button>
           </nav>
 
-          <div className="flex items-center gap-2.5">
+          <div className="hidden md:flex items-center gap-2.5">
             <button
               onClick={() => scrollTo('register-login-section')}
               className="px-4 py-2 text-xs font-semibold text-neutral-700 hover:text-black transition-colors cursor-pointer"
@@ -177,7 +181,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
             </button>
           </div>
 
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 text-black cursor-pointer"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden absolute top-16 left-4 right-4 bg-white/95 backdrop-blur-3xl border border-neutral-200 rounded-2xl shadow-xl p-4 flex flex-col gap-4 text-sm font-semibold z-50">
+            <button onClick={() => { scrollTo('interface-preview'); setMobileMenuOpen(false); }} className="text-left py-2 hover:text-neutral-600">Preview</button>
+            <button onClick={() => { scrollTo('features'); setMobileMenuOpen(false); }} className="text-left py-2 hover:text-neutral-600">Features</button>
+            <button onClick={() => { scrollTo('showcase'); setMobileMenuOpen(false); }} className="text-left py-2 hover:text-neutral-600">Showcase</button>
+            <button onClick={() => { scrollTo('security'); setMobileMenuOpen(false); }} className="text-left py-2 hover:text-neutral-600">Security</button>
+            <button onClick={() => { scrollTo('how-it-works'); setMobileMenuOpen(false); }} className="text-left py-2 hover:text-neutral-600">How It Works</button>
+            <div className="h-px bg-neutral-100 my-2" />
+            <button onClick={() => { scrollTo('register-login-section'); setMobileMenuOpen(false); }} className="text-left py-2 hover:text-neutral-600">Sign In</button>
+            <button onClick={() => { scrollTo('register-login-section'); setMobileMenuOpen(false); }} className="text-center py-3 bg-black text-white rounded-full text-xs font-bold uppercase tracking-wider mt-2">Get Started</button>
+          </div>
+        )}
       </header>
 
       {/* HERO SECTION */}
@@ -714,7 +738,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="bg-white border border-neutral-200 rounded-[28px] p-8 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xs">
-            <div className="flex items-center gap-3">
+            <div
+              className="flex items-center gap-3 cursor-pointer"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
               <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center font-bold text-xs">
                 C
               </div>
@@ -728,16 +755,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-neutral-600">
-              <button onClick={() => scrollTo('interface-preview')} className="hover:text-black transition-colors cursor-pointer">Preview</button>
-              <button onClick={() => scrollTo('features')} className="hover:text-black transition-colors cursor-pointer">Features</button>
-              <button onClick={() => scrollTo('showcase')} className="hover:text-black transition-colors cursor-pointer">Showcase</button>
-              <button onClick={() => scrollTo('security')} className="hover:text-black transition-colors cursor-pointer">Security</button>
-              <button onClick={() => scrollTo('how-it-works')} className="hover:text-black transition-colors cursor-pointer">How It Works</button>
+            <div className="flex flex-col items-center sm:items-start gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-neutral-600">
+                <button onClick={() => scrollTo('interface-preview')} className="hover:text-black transition-colors cursor-pointer">Preview</button>
+                <button onClick={() => scrollTo('features')} className="hover:text-black transition-colors cursor-pointer">Features</button>
+                <button onClick={() => scrollTo('showcase')} className="hover:text-black transition-colors cursor-pointer">Showcase</button>
+                <button onClick={() => scrollTo('security')} className="hover:text-black transition-colors cursor-pointer">Security</button>
+                <button onClick={() => scrollTo('how-it-works')} className="hover:text-black transition-colors cursor-pointer">How It Works</button>
+              </div>
+
+              <div className="flex items-center gap-4 text-xs font-mono mt-2">
+                <a href="mailto:support@chatpro.app" className="text-neutral-500 hover:text-black transition-colors flex items-center gap-1">
+                  <Mail className="w-3.5 h-3.5" /> support@chatpro.app
+                </a>
+                <a href="tel:+18005550199" className="text-neutral-500 hover:text-black transition-colors flex items-center gap-1">
+                  <Phone className="w-3.5 h-3.5" /> +1 (800) 555-0199
+                </a>
+              </div>
             </div>
 
             <div className="text-[11px] text-neutral-400 font-mono">
-              © 2026 Chatpro
+              © {new Date().getFullYear()} ChatPro
             </div>
           </div>
 
