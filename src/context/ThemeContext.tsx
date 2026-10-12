@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-export type WallpaperStyle = 'default' | 'clean' | 'midnight' | 'emerald' | 'cyber' | 'mocha' | 'obsidian' | 'carbon' | 'aurora';
+export type WallpaperStyle = 'default' | 'clean' | 'midnight' | 'emerald' | 'cyber' | 'warm' | 'mocha' | 'obsidian' | 'carbon' | 'aurora';
 export const WALLPAPER_OPTIONS: Array<{ id: WallpaperStyle; label: string; description: string }> = [
   { id: 'default', label: 'Clean white', description: 'Quiet white workspace' },
   { id: 'midnight', label: 'Midnight', description: 'Deep graphite and ink' },
   { id: 'emerald', label: 'Forest', description: 'Muted green-black' },
   { id: 'cyber', label: 'Technical grid', description: 'Dark technical grid' },
-  { id: 'mocha', label: 'Warm mocha', description: 'Soft brown neutrals' },
+  { id: 'warm', label: 'Warm mocha', description: 'Soft brown neutrals' },
   { id: 'obsidian', label: 'Obsidian', description: 'Near-black contrast' },
   { id: 'carbon', label: 'Carbon', description: 'Textured dark grey' },
   { id: 'aurora', label: 'Aurora', description: 'Quiet northern light' },
