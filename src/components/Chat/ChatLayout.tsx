@@ -91,6 +91,7 @@ import { CreateGroupModal } from './CreateGroupModal';
 import { ContactsModal } from '../Contacts/ContactsModal';
 import { SettingsModal } from '../Settings/SettingsModal';
 import { AdminPanelModal } from '../Admin/AdminPanelModal';
+import { CallService } from '../../services/callService';
 
 const ConversationSkeleton = () => (
   <div className="p-3 flex items-start gap-3 animate-pulse">
@@ -109,7 +110,7 @@ const MessageSkeleton = () => (
       <div className="p-3 rounded-2xl bg-slate-200 dark:bg-slate-800 w-48 h-12 rounded-bl-xs" />
     </div>
     <div className="flex items-start justify-end gap-3">
-      <div className="p-3 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 w-64 h-16 rounded-br-xs" />
+      <div className="p-3 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 w-64 h-16 rounded-br-xs" />
     </div>
     <div className="flex items-start gap-3">
       <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
@@ -203,14 +204,20 @@ export const ChatLayout: React.FC = () => {
     partnerName: string;
     partnerAvatar: string;
     startTime: number;
+    callId?: string;
+    isReceiving?: boolean;
   } | null>(null);
   const [callMuted, setCallMuted] = useState(false);
   const [callVideoOff, setCallVideoOff] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
 
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const callServiceRef = useRef<CallService | null>(null);
+
   useEffect(() => {
     let timer: any;
-    if (activeCall) {
+    if (activeCall && !activeCall.isReceiving) {
       setCallDuration(0);
       timer = setInterval(() => {
         setCallDuration((prev) => prev + 1);
@@ -221,6 +228,30 @@ export const ChatLayout: React.FC = () => {
     return () => clearInterval(timer);
   }, [activeCall]);
 
+  // Listen for incoming calls
+  useEffect(() => {
+    if (!currentUser || !activeConversation || activeConversation.id === GLOBAL_CHAT_ID) return;
+
+    const callDocRef = doc(db, 'calls', activeConversation.id);
+    const unsubscribe = onSnapshot(callDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const callData = docSnap.data();
+        if (callData.offer && !callData.answer && !activeCall) {
+          setActiveCall({
+            type: 'video',
+            partnerName: activeInfo.title,
+            partnerAvatar: activeInfo.avatar || '',
+            startTime: Date.now(),
+            callId: docSnap.id,
+            isReceiving: true,
+          });
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [currentUser, activeConversation, activeCall]);
+
   const formatCallDuration = (sec: number) => {
     const mins = Math.floor(sec / 60);
     const secs = sec % 60;
@@ -228,13 +259,68 @@ export const ChatLayout: React.FC = () => {
   };
 
   const startCall = async (type: 'audio' | 'video') => {
-    setActiveCall({ type, partnerName: activeInfo.title, partnerAvatar: activeInfo.avatar || userProfile?.photoURL || '', startTime: Date.now() });
+    const callId = activeConversation.id;
+    setActiveCall({ type, partnerName: activeInfo.title, partnerAvatar: activeInfo.avatar || userProfile?.photoURL || '', startTime: Date.now(), callId });
+
     if (userProfile && activeConversation.id !== GLOBAL_CHAT_ID) {
       try {
+        const callService = new CallService();
+        callServiceRef.current = callService;
+
+        await callService.setupLocalStream(localVideoRef, type);
+        callService.setupRemoteStream(remoteVideoRef);
+        await callService.startCall(callId);
+
         await sendMessage(activeConversation, userProfile, `Started a ${type} call 📞`, 'text');
       } catch (err) {
         console.error('Failed to broadcast call signal:', err);
       }
+    }
+  };
+
+  const acceptCall = async () => {
+    if (!activeCall || !activeCall.callId) return;
+
+    try {
+      const callService = new CallService();
+      callServiceRef.current = callService;
+
+      setActiveCall((prev) => prev ? { ...prev, isReceiving: false } : null);
+
+      // We need to wait for state to update and video elements to unhide,
+      // but since we made them permanent and toggled visibility with classes, they are always mounted now.
+      await callService.setupLocalStream(localVideoRef, activeCall.type);
+      callService.setupRemoteStream(remoteVideoRef);
+      await callService.answerCall(activeCall.callId);
+    } catch (err) {
+      console.error('Failed to accept call:', err);
+    }
+  };
+
+  const endCall = () => {
+    if (callServiceRef.current) {
+      callServiceRef.current.endCall();
+      callServiceRef.current = null;
+    }
+    setActiveCall(null);
+    setCallDuration(0);
+  };
+
+  const toggleMute = () => {
+    if (callServiceRef.current?.localStream) {
+      callServiceRef.current.localStream.getAudioTracks().forEach(track => {
+        track.enabled = !track.enabled;
+      });
+      setCallMuted(!callMuted);
+    }
+  };
+
+  const toggleVideo = () => {
+    if (callServiceRef.current?.localStream) {
+      callServiceRef.current.localStream.getVideoTracks().forEach(track => {
+        track.enabled = !track.enabled;
+      });
+      setCallVideoOff(!callVideoOff);
     }
   };
 
@@ -781,11 +867,11 @@ export const ChatLayout: React.FC = () => {
     default: 'bg-slate-50/60 dark:bg-slate-950/60',
     midnight: 'bg-slate-900 dark:bg-[#070d19]',
     emerald: 'bg-emerald-950/20 dark:bg-[#04140d]',
-    cyber: 'bg-purple-950/20 dark:bg-[#11071d]',
+    cyber: 'bg-slate-950/20 dark:bg-[#11071d]',
     warm: 'bg-amber-950/20 dark:bg-[#180e04]',
     obsidian: 'bg-neutral-950',
     carbon: 'bg-zinc-950',
-    aurora: 'bg-gradient-to-tr from-slate-950 via-indigo-950 to-slate-950',
+    aurora: 'bg-gradient-to-tr from-slate-950 via-emerald-950 to-slate-950',
   };
 
   const getConversationInfo = (conv: Conversation) => {
@@ -879,7 +965,7 @@ export const ChatLayout: React.FC = () => {
               <img
                 src={userProfile?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.uid}`}
                 alt={userProfile?.displayName}
-                className="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-slate-700 cursor-pointer hover:ring-2 hover:ring-indigo-500/40 transition-all"
+                className="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-slate-700 cursor-pointer hover:ring-2 hover:ring-emerald-500/40 transition-all"
                 onClick={() => setShowSettings(true)}
               />
               <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
@@ -907,14 +993,14 @@ export const ChatLayout: React.FC = () => {
             <button
               onClick={() => setShowContacts(true)}
               title="Find real users"
-              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               <Users className="w-4 h-4" />
             </button>
             <button
               onClick={() => setShowCreateGroup(true)}
               title="Create new group"
-              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               <Plus className="w-4 h-4" />
             </button>
@@ -937,32 +1023,32 @@ export const ChatLayout: React.FC = () => {
               value={sidebarSearch}
               onChange={(e) => setSidebarSearch(e.target.value)}
               placeholder="Search conversations..."
-              className="w-full pl-8.5 pr-3 py-1.5 bg-slate-100/80 dark:bg-slate-800/60 border border-transparent focus:border-indigo-500/50 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none transition-all"
+              className="w-full pl-8.5 pr-3 py-1.5 bg-slate-100/80 dark:bg-slate-800/60 border border-transparent focus:border-emerald-500/50 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none transition-all"
             />
           </div>
 
           <div className="flex items-center gap-1 text-[10px] font-semibold text-slate-500">
             <button
               onClick={() => setConversationFilter('all')}
-              className={`px-2 py-0.5 rounded-lg transition-colors ${conversationFilter === 'all' ? 'bg-indigo-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              className={`px-2 py-0.5 rounded-lg transition-colors ${conversationFilter === 'all' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
             >
               All
             </button>
             <button
               onClick={() => setConversationFilter('direct')}
-              className={`px-2 py-0.5 rounded-lg transition-colors ${conversationFilter === 'direct' ? 'bg-indigo-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              className={`px-2 py-0.5 rounded-lg transition-colors ${conversationFilter === 'direct' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
             >
               DMs
             </button>
             <button
               onClick={() => setConversationFilter('group')}
-              className={`px-2 py-0.5 rounded-lg transition-colors ${conversationFilter === 'group' ? 'bg-indigo-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              className={`px-2 py-0.5 rounded-lg transition-colors ${conversationFilter === 'group' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
             >
               Groups
             </button>
             <button
               onClick={() => setConversationFilter('unread')}
-              className={`px-2 py-0.5 rounded-lg transition-colors ${conversationFilter === 'unread' ? 'bg-indigo-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              className={`px-2 py-0.5 rounded-lg transition-colors ${conversationFilter === 'unread' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
             >
               Unread
             </button>
@@ -977,11 +1063,11 @@ export const ChatLayout: React.FC = () => {
             onClick={() => { setActiveConversation(getGlobalChatConversation()); setMobileView('chat'); }}
             className={`mx-2 my-1.5 p-3.5 flex items-center gap-3.5 cursor-pointer transition-all rounded-2xl border ${
               activeConversation.id === GLOBAL_CHAT_ID 
-                ? 'bg-indigo-600/15 border-indigo-500/30 shadow-sm ring-1 ring-indigo-500/20 text-white' 
-                : 'bg-indigo-50/40 dark:bg-indigo-950/20 border-indigo-200/40 dark:border-indigo-900/40 hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40'
+                ? 'bg-emerald-600/15 border-emerald-500/30 shadow-sm ring-1 ring-emerald-500/20 text-white'
+                : 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200/40 dark:border-emerald-900/40 hover:bg-emerald-50/80 dark:hover:bg-emerald-950/40'
             }`}
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/20">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/20">
               <Globe className="w-5 h-5" />
             </div>
 
@@ -991,7 +1077,7 @@ export const ChatLayout: React.FC = () => {
                   <h4 className="text-xs font-bold text-slate-900 dark:text-white">
                     Global Chat
                   </h4>
-                  <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300 uppercase tracking-wider">
+                  <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300 uppercase tracking-wider">
                     Public
                   </span>
                 </div>
@@ -1031,7 +1117,7 @@ export const ChatLayout: React.FC = () => {
               </p>
               <button
                 onClick={() => setShowContacts(true)}
-                className="mt-2.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition-colors"
+                className="mt-2.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 rounded-xl text-xs font-semibold hover:bg-emerald-100 transition-colors"
               >
                 Find Real Users to Message
               </button>
@@ -1048,7 +1134,7 @@ export const ChatLayout: React.FC = () => {
                   onClick={() => { setActiveConversation(conv); setMobileView('chat'); }}
                   className={`mx-2 my-1.5 p-3.5 flex items-center gap-3.5 cursor-pointer transition-all rounded-2xl group relative ${
                     isSelected 
-                      ? 'bg-indigo-600/15 border border-indigo-500/30 shadow-sm ring-1 ring-indigo-500/20 text-white' 
+                      ? 'bg-emerald-600/15 border border-emerald-500/30 shadow-sm ring-1 ring-emerald-500/20 text-white'
                       : 'hover:bg-slate-100/80 dark:hover:bg-slate-800/60 border border-transparent'
                   }`}
                 >
@@ -1094,7 +1180,7 @@ export const ChatLayout: React.FC = () => {
                         {conv.lastMessage ? (
                           <>
                             {conv.lastMessage.senderId === currentUser?.uid && (
-                              <span className="text-indigo-600 dark:text-indigo-400 font-medium">You: </span>
+                              <span className="text-emerald-600 dark:text-emerald-400 font-medium">You: </span>
                             )}
                             {conv.lastMessage.text || conv.lastMessage.content}
                           </>
@@ -1104,7 +1190,7 @@ export const ChatLayout: React.FC = () => {
                       </p>
 
                       {unread > 0 && (
-                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-indigo-600 text-white shrink-0">
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-emerald-600 text-white shrink-0">
                           {unread}
                         </span>
                       )}
@@ -1140,7 +1226,7 @@ export const ChatLayout: React.FC = () => {
               onClick={() => setShowInfoPanel(!showInfoPanel)}
             >
               {activeConversation.id === GLOBAL_CHAT_ID ? (
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center shadow-xs">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 text-white flex items-center justify-center shadow-xs">
                   <Globe className="w-4 h-4" />
                 </div>
               ) : (
@@ -1166,7 +1252,7 @@ export const ChatLayout: React.FC = () => {
                   {activeInfo.title}
                 </h3>
                 {activeConversation.id === GLOBAL_CHAT_ID && (
-                  <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300">
+                  <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">
                     Live Room
                   </span>
                 )}
@@ -1174,12 +1260,12 @@ export const ChatLayout: React.FC = () => {
               
               <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2">
                 {Object.keys(typingUsers).length > 0 ? (
-                  <div className="text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-1.5 animate-pulse">
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+                  <div className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5 animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" />
                     <span>{Object.values(typingUsers).join(', ')} {Object.keys(typingUsers).length > 1 ? 'are' : 'is'} typing...</span>
                   </div>
                 ) : activeConversation.id === GLOBAL_CHAT_ID ? (
-                  <span className="text-indigo-600 dark:text-indigo-400 font-medium">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">
                     Messages broadcast in real-time to all users
                   </span>
                 ) : activeConversation.type === 'direct' ? (
@@ -1210,7 +1296,7 @@ export const ChatLayout: React.FC = () => {
             <button
               onClick={() => startCall('video')}
               title="Start Video Call"
-              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               <Video className="w-4 h-4" />
             </button>
@@ -1226,7 +1312,7 @@ export const ChatLayout: React.FC = () => {
             <button
               onClick={() => setShowSearchInChat(!showSearchInChat)}
               title="Search inside this conversation"
-              className={`p-1.5 rounded-lg transition-colors ${showSearchInChat ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              className={`p-1.5 rounded-lg transition-colors ${showSearchInChat ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'}`}
             >
               <Search className="w-4 h-4" />
             </button>
@@ -1234,7 +1320,7 @@ export const ChatLayout: React.FC = () => {
             <button
               onClick={() => setShowInfoPanel(!showInfoPanel)}
               title="Conversation details"
-              className={`p-1.5 rounded-lg transition-colors ${showInfoPanel ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              className={`p-1.5 rounded-lg transition-colors ${showInfoPanel ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'}`}
             >
               <Info className="w-4 h-4" />
             </button>
@@ -1265,10 +1351,10 @@ export const ChatLayout: React.FC = () => {
 
         {/* Pinned Message Banner */}
         {pinnedMessage && (
-          <div className="px-4 py-2 bg-indigo-50/80 dark:bg-indigo-950/50 border-b border-indigo-200/60 dark:border-indigo-900/40 flex items-center justify-between text-xs text-indigo-950 dark:text-indigo-200">
+          <div className="px-4 py-2 bg-emerald-50/80 dark:bg-emerald-950/50 border-b border-emerald-200/60 dark:border-emerald-900/40 flex items-center justify-between text-xs text-emerald-950 dark:text-emerald-200">
             <div className="flex items-center gap-2 truncate">
-              <Pin className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-              <span className="font-semibold text-indigo-700 dark:text-indigo-300 shrink-0">Pinned:</span>
+              <Pin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span className="font-semibold text-emerald-700 dark:text-emerald-300 shrink-0">Pinned:</span>
               <span className="truncate">{pinnedMessage.text || pinnedMessage.content}</span>
             </div>
             <button
@@ -1295,7 +1381,7 @@ export const ChatLayout: React.FC = () => {
 
         {/* Uploading progress notification */}
         {uploadingProgress !== null && (
-          <div className="px-4 py-1 bg-indigo-600 text-white text-xs font-semibold flex items-center justify-between">
+          <div className="px-4 py-1 bg-emerald-600 text-white text-xs font-semibold flex items-center justify-between">
             <span>Uploading attachment... {Math.round(uploadingProgress)}%</span>
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
           </div>
@@ -1305,12 +1391,12 @@ export const ChatLayout: React.FC = () => {
         <div ref={messagesContainerRef} className={`flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 ${wallpaperClasses[wallpaper] || wallpaperClasses.default}`}>
           {loadingMessages ? (
             <div className="py-20 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs">
-              <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+              <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
               <span>Connecting to real-time conversation stream...</span>
             </div>
           ) : displayedMessages.length === 0 ? (
             <div className="py-20 text-center text-slate-400">
-              <div className="w-12 h-12 mx-auto rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3">
                 {activeConversation.id === GLOBAL_CHAT_ID ? <Globe className="w-6 h-6" /> : <MessageSquare className="w-6 h-6" />}
               </div>
               <h4 className="font-bold text-sm text-slate-700 dark:text-slate-300">
@@ -1366,7 +1452,7 @@ export const ChatLayout: React.FC = () => {
                       {msg.replyTo && !isDeleted && (
                         <div className={`p-2 rounded-t-xl text-[10px] border-b mb-0.5 ${
                           isMe 
-                            ? 'bg-indigo-700 text-indigo-100 border-indigo-600' 
+                            ? 'bg-emerald-700 text-emerald-100 border-emerald-600'
                             : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600'
                         }`}>
                           <div className="flex items-center gap-1 font-semibold">
@@ -1380,7 +1466,7 @@ export const ChatLayout: React.FC = () => {
                       {/* Message Content Bubble */}
                       <div className={`p-3 rounded-2xl shadow-xs text-xs sm:text-sm leading-relaxed ${
                         isMe 
-                          ? 'bg-indigo-600 text-white rounded-br-xs' 
+                          ? 'bg-emerald-600 text-white rounded-br-xs'
                           : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700/80 rounded-bl-xs'
                       } ${isDeleted ? 'italic opacity-60' : ''}`}>
                         
@@ -1457,7 +1543,7 @@ export const ChatLayout: React.FC = () => {
                         )}
 
                         {/* Timestamp & Status Info */}
-                        <div className={`flex items-center justify-end gap-1.5 mt-1 text-[9px] ${isMe ? 'text-indigo-200' : 'text-slate-400'}`}>
+                        <div className={`flex items-center justify-end gap-1.5 mt-1 text-[9px] ${isMe ? 'text-emerald-200' : 'text-slate-400'}`}>
                           {msg.edited && !isDeleted && <span>(edited)</span>}
                           <span>{formatMessageTime(msg.createdAt || msg.timestamp)}</span>
                           
@@ -1465,15 +1551,15 @@ export const ChatLayout: React.FC = () => {
                           {isMe && !isDeleted && (
                             <span className="flex items-center gap-0.5">
                               {activeConversation.id === GLOBAL_CHAT_ID ? (
-                                <span title="Sent"><CheckCheck className="w-3 h-3 text-indigo-300" /></span>
+                                <span title="Sent"><CheckCheck className="w-3 h-3 text-emerald-300" /></span>
                               ) : msg.readBy && msg.readBy.length > 1 ? (
                                 <span title="Seen by recipient" className="flex items-center gap-0.5 text-cyan-200 font-medium">
                                   <CheckCheck className="w-3 h-3 text-cyan-300 animate-in fade-in" />
                                   <span className="text-[8px] uppercase tracking-wider">Seen</span>
                                 </span>
                               ) : (
-                                <span title="Delivered" className="flex items-center gap-0.5 text-indigo-200 opacity-80">
-                                  <CheckCheck className="w-3 h-3 text-indigo-300" />
+                                <span title="Delivered" className="flex items-center gap-0.5 text-emerald-200 opacity-80">
+                                  <CheckCheck className="w-3 h-3 text-emerald-300" />
                                   <span className="text-[8px] uppercase tracking-wider">Delivered</span>
                                 </span>
                               )}
@@ -1495,7 +1581,7 @@ export const ChatLayout: React.FC = () => {
                                 onClick={() => handleReact(msg, emoji)}
                                 className={`px-1.5 py-0.2 rounded-full text-xs flex items-center gap-1 border transition-colors ${
                                   hasReacted 
-                                    ? 'bg-indigo-100 dark:bg-indigo-950/80 border-indigo-300 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-bold' 
+                                    ? 'bg-emerald-100 dark:bg-emerald-950/80 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-bold'
                                     : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
                                 }`}
                               >
@@ -1553,7 +1639,7 @@ export const ChatLayout: React.FC = () => {
                           <button
                             onClick={() => handleTogglePin(msg)}
                             title={msg.pinned ? 'Unpin' : 'Pin'}
-                            className="p-1 rounded text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700"
+                            className="p-1 rounded text-slate-400 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-700"
                           >
                             <Pin className="w-3 h-3" />
                           </button>
@@ -1577,7 +1663,7 @@ export const ChatLayout: React.FC = () => {
                                 setInputText(msg.text || msg.content);
                               }}
                               title="Edit"
-                              className="p-1 rounded text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+                              className="p-1 rounded text-slate-400 hover:text-emerald-500 hover:bg-slate-100 dark:hover:bg-slate-700"
                             >
                               <Edit3 className="w-3 h-3" />
                             </button>
@@ -1625,9 +1711,9 @@ export const ChatLayout: React.FC = () => {
           {Object.keys(typingUsers).length > 0 && (
             <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 pt-1">
               <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce" />
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.2s]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.4s]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:0.2s]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:0.4s]" />
                 <span className="ml-1 text-[10px] font-medium text-slate-600 dark:text-slate-300">
                   {Object.values(typingUsers).join(', ')} {Object.keys(typingUsers).length > 1 ? 'are' : 'is'} typing...
                 </span>
@@ -1642,7 +1728,7 @@ export const ChatLayout: React.FC = () => {
         {replyingTo && (
           <div className="px-4 py-1.5 bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
             <div className="flex items-center gap-2 truncate">
-              <CornerDownRight className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+              <CornerDownRight className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               <span className="font-semibold text-slate-700 dark:text-slate-300">Replying to {replyingTo.senderName}:</span>
               <span className="text-slate-500 dark:text-slate-400 truncate">{replyingTo.text || replyingTo.content}</span>
             </div>
@@ -1722,7 +1808,7 @@ export const ChatLayout: React.FC = () => {
                     }
                   }}
                   title="Take photo with camera"
-                  className="p-1.5 sm:p-2 rounded-xl hover:bg-white dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer shadow-2xs"
+                  className="p-1.5 sm:p-2 rounded-xl hover:bg-white dark:hover:bg-slate-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all cursor-pointer shadow-2xs"
                 >
                   <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
@@ -1736,7 +1822,7 @@ export const ChatLayout: React.FC = () => {
                     }
                   }}
                   title="Send photo or video"
-                  className="p-1.5 sm:p-2 rounded-xl hover:bg-white dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer shadow-2xs"
+                  className="p-1.5 sm:p-2 rounded-xl hover:bg-white dark:hover:bg-slate-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all cursor-pointer shadow-2xs"
                 >
                   <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
@@ -1750,7 +1836,7 @@ export const ChatLayout: React.FC = () => {
                     }
                   }}
                   title="Attach document or file"
-                  className="p-1.5 sm:p-2 rounded-xl hover:bg-white dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer shadow-2xs"
+                  className="p-1.5 sm:p-2 rounded-xl hover:bg-white dark:hover:bg-slate-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all cursor-pointer shadow-2xs"
                 >
                   <Paperclip className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
@@ -1759,7 +1845,7 @@ export const ChatLayout: React.FC = () => {
                   type="button"
                   onClick={() => setShowVoiceRecorder(true)}
                   title="Record voice message"
-                  className="p-1.5 sm:p-2 rounded-xl hover:bg-white dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer shadow-2xs"
+                  className="p-1.5 sm:p-2 rounded-xl hover:bg-white dark:hover:bg-slate-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all cursor-pointer shadow-2xs"
                 >
                   <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
@@ -1779,7 +1865,7 @@ export const ChatLayout: React.FC = () => {
                     }
                   }}
                   placeholder={activeConversation.id === GLOBAL_CHAT_ID ? "Broadcast..." : "Type message..."}
-                  className="w-full max-h-32 py-2 sm:py-2.5 px-3 sm:px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 focus:border-indigo-500 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none resize-none transition-all shadow-inner"
+                  className="w-full max-h-32 py-2 sm:py-2.5 px-3 sm:px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 focus:border-emerald-500 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none resize-none transition-all shadow-inner"
                 />
               </div>
 
@@ -1787,7 +1873,7 @@ export const ChatLayout: React.FC = () => {
               <button
                 type="submit"
                 disabled={!inputText.trim() || sendingMessage}
-                className="p-2.5 sm:p-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white shadow-md shadow-indigo-600/20 transition-all shrink-0 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center"
+                className="p-2.5 sm:p-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white shadow-md shadow-emerald-600/20 transition-all shrink-0 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center"
                 title="Send message"
               >
                 {sendingMessage ? (
@@ -1822,7 +1908,7 @@ export const ChatLayout: React.FC = () => {
             {/* Avatar & Header */}
             <div className="text-center">
               {activeConversation.id === GLOBAL_CHAT_ID ? (
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20 mb-3">
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-emerald-600 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-emerald-600/20 mb-3">
                   <Globe className="w-8 h-8" />
                 </div>
               ) : (
@@ -1842,8 +1928,8 @@ export const ChatLayout: React.FC = () => {
 
             {/* Global Chat Description */}
             {activeConversation.id === GLOBAL_CHAT_ID && (
-              <div className="p-3 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-900/40 text-xs text-slate-700 dark:text-slate-300">
-                <p className="font-semibold text-indigo-700 dark:text-indigo-300 mb-1">Public Community Room</p>
+              <div className="p-3 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-900/40 text-xs text-slate-700 dark:text-slate-300">
+                <p className="font-semibold text-emerald-700 dark:text-emerald-300 mb-1">Public Community Room</p>
                 <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
                   Every verified user on ChatPro can read and reply to messages in Global Chat. Use contacts to initiate private 1-on-1 chats.
                 </p>
@@ -2038,30 +2124,44 @@ export const ChatLayout: React.FC = () => {
           <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-8 flex flex-col items-center text-white shadow-2xl relative overflow-hidden">
             
             {/* Background ambient glow */}
-            <div className="absolute inset-0 bg-gradient-to-b from-indigo-600/10 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b from-emerald-600/10 via-transparent to-transparent pointer-events-none" />
 
             {/* Call type badge */}
-            <span className="px-3 py-1 rounded-full text-xs font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-6 uppercase tracking-wider">
-              {activeCall.type === 'video' ? 'Secure Video Call' : 'Secure Audio Call'}
+            <span className="px-3 py-1 rounded-full text-xs font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 mb-6 uppercase tracking-wider">
+              {activeCall.isReceiving ? `Incoming ${activeCall.type} call` : (activeCall.type === 'video' ? 'Secure Video Call' : 'Secure Audio Call')}
             </span>
 
             {/* Avatar or Video feed box */}
-            {activeCall.type === 'video' && !callVideoOff ? (
-              <div className="w-full h-64 rounded-2xl bg-slate-950 border border-slate-800 mb-6 flex flex-col items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center opacity-30">
-                  <Video className="w-16 h-16 text-indigo-400 animate-pulse" />
-                </div>
-                <div className="absolute bottom-3 right-3 px-3 py-1 rounded-xl bg-black/60 backdrop-blur-md text-xs font-mono text-white flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                  <span>Live HD Stream</span>
-                </div>
+            <div className={`w-full ${activeCall.type === 'video' && !callVideoOff && !activeCall.isReceiving ? 'h-64' : 'h-0 hidden'} rounded-2xl bg-slate-950 border border-slate-800 mb-6 flex items-center justify-center relative overflow-hidden group`}>
+              <video
+                ref={remoteVideoRef}
+                autoPlay
+                playsInline
+                className="w-full h-full object-cover"
+              />
+
+              <div className="absolute top-4 right-4 w-24 h-32 bg-black rounded-xl overflow-hidden border-2 border-emerald-500 shadow-xl z-10 transition-transform hover:scale-105">
+                 <video
+                  ref={localVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                />
               </div>
-            ) : (
+
+              <div className="absolute bottom-3 right-3 px-3 py-1 rounded-xl bg-black/60 backdrop-blur-md text-xs font-mono text-white flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                <span>Live HD Stream</span>
+              </div>
+            </div>
+
+            {(!activeCall.type || activeCall.type === 'audio' || callVideoOff || activeCall.isReceiving) && (
               <div className="relative mb-6">
                 <img
                   src={activeCall.partnerAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${activeCall.partnerName}`}
                   alt={activeCall.partnerName}
-                  className="w-28 h-28 rounded-full object-cover border-4 border-indigo-500/50 shadow-2xl animate-pulse"
+                  className="w-28 h-28 rounded-full object-cover border-4 border-emerald-500/50 shadow-2xl animate-pulse"
                 />
                 <span className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-slate-900" />
               </div>
@@ -2070,37 +2170,59 @@ export const ChatLayout: React.FC = () => {
             <h3 className="font-extrabold text-xl text-white mb-1">
               {activeCall.partnerName}
             </h3>
-            <p className="text-sm font-mono text-indigo-400 mb-6">
-              {formatCallDuration(callDuration)}
+            <p className="text-sm font-mono text-emerald-400 mb-6">
+              {activeCall.isReceiving ? 'Calling...' : formatCallDuration(callDuration)}
             </p>
 
             {/* Call Controls Bar */}
             <div className="flex items-center gap-4 bg-slate-800/80 border border-slate-700/80 px-6 py-3 rounded-full backdrop-blur-md">
-              <button
-                onClick={() => setCallMuted(!callMuted)}
-                className={`p-3 rounded-full transition-colors ${callMuted ? 'bg-red-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'}`}
-                title={callMuted ? 'Unmute' : 'Mute'}
-              >
-                {callMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-              </button>
+              {activeCall.isReceiving ? (
+                <>
+                  <button
+                    onClick={acceptCall}
+                    className="p-3.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30 transition-transform hover:scale-105 flex items-center gap-2 px-6"
+                    title="Accept Call"
+                  >
+                    <Phone className="w-5 h-5" />
+                    <span className="font-bold">Accept</span>
+                  </button>
+                  <button
+                    onClick={endCall}
+                    className="p-3.5 rounded-full bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/30 transition-transform hover:scale-105"
+                    title="Decline Call"
+                  >
+                    <PhoneOff className="w-6 h-6" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={toggleMute}
+                    className={`p-3 rounded-full transition-colors ${callMuted ? 'bg-red-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'}`}
+                    title={callMuted ? 'Unmute' : 'Mute'}
+                  >
+                    {callMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                  </button>
 
-              {activeCall.type === 'video' && (
-                <button
-                  onClick={() => setCallVideoOff(!callVideoOff)}
-                  className={`p-3 rounded-full transition-colors ${callVideoOff ? 'bg-red-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'}`}
-                  title={callVideoOff ? 'Turn Camera On' : 'Turn Camera Off'}
-                >
-                  {callVideoOff ? <CameraOff className="w-5 h-5" /> : <Camera className="w-5 h-5" />}
-                </button>
+                  {activeCall.type === 'video' && (
+                    <button
+                      onClick={toggleVideo}
+                      className={`p-3 rounded-full transition-colors ${callVideoOff ? 'bg-red-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'}`}
+                      title={callVideoOff ? 'Turn Camera On' : 'Turn Camera Off'}
+                    >
+                      {callVideoOff ? <CameraOff className="w-5 h-5" /> : <Camera className="w-5 h-5" />}
+                    </button>
+                  )}
+
+                  <button
+                    onClick={endCall}
+                    className="p-3.5 rounded-full bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/30 transition-transform hover:scale-105"
+                    title="End Call"
+                  >
+                    <PhoneOff className="w-6 h-6" />
+                  </button>
+                </>
               )}
-
-              <button
-                onClick={() => setActiveCall(null)}
-                className="p-3.5 rounded-full bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/30 transition-transform hover:scale-105"
-                title="End Call"
-              >
-                <PhoneOff className="w-6 h-6" />
-              </button>
             </div>
 
           </div>
