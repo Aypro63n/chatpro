@@ -95,7 +95,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         {/* Header */}
         <div className="p-6 pb-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <Users className="w-5 h-5" />
             </div>
             <div>
@@ -136,7 +136,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Design Systems Team"
-              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
@@ -149,7 +149,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What is this group about?"
-              className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
             />
           </div>
 
@@ -164,7 +164,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
             <div className="border border-slate-200 dark:border-slate-800 rounded-2xl max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
               {loadingUsers ? (
                 <div className="p-4 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                  <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
                   <span>Loading registered users...</span>
                 </div>
               ) : availableUsers.length === 0 ? (
@@ -178,7 +178,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                     <div
                       key={user.uid}
                       onClick={() => toggleUserSelection(user)}
-                      className={`p-2.5 flex items-center justify-between cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${isSelected ? 'bg-indigo-50/80 dark:bg-indigo-950/40' : ''}`}
+                      className={`p-2.5 flex items-center justify-between cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${isSelected ? 'bg-emerald-50/80 dark:bg-emerald-950/40' : ''}`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <img
@@ -196,7 +196,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                         </div>
                       </div>
 
-                      <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 dark:border-slate-700'}`}>
+                      <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${isSelected ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 dark:border-slate-700'}`}>
                         {isSelected && <Check className="w-3.5 h-3.5" />}
                       </div>
                     </div>
@@ -211,7 +211,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 transition-all disabled:opacity-60 cursor-pointer"
+              className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 transition-all disabled:opacity-60 cursor-pointer"
             >
               {submitting ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
