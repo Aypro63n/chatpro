@@ -1,191 +1,26 @@
 import React, { useState } from 'react';
-import { 
-  LogOut, 
-  Shield, 
-  Menu,
-  X,
-  ArrowRight,
-  Sun,
-  Moon
-} from 'lucide-react';
+import { ArrowRight, LogOut, Menu, Moon, Shield, Sun, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
-interface NavbarProps {
-  onOpenAuth: (mode?: 'login' | 'register') => void;
-  onOpenChat: () => void;
-  onOpenAdmin?: () => void;
-  currentView?: 'landing' | 'chat';
-}
+interface NavbarProps { onOpenAuth: (mode?: 'login' | 'register') => void; onOpenChat: () => void; onOpenAdmin?: () => void; currentView?: 'landing' | 'chat'; }
 
-export const Navbar: React.FC<NavbarProps> = ({ 
-  onOpenAuth, 
-  onOpenChat, 
-  onOpenAdmin,
-  currentView = 'landing' 
-}) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onOpenChat, onOpenAdmin, currentView = 'landing' }) => {
   const { currentUser, isOwner, isAdmin, isMaintainer, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const scrollToSection = (id: string) => {
-    setMobileMenuOpen(false);
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
+  const [open, setOpen] = useState(false);
   const hasModRole = isOwner || isAdmin || isMaintainer;
-
+  const go = (id: string) => { setOpen(false); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
   return (
-    <header className="sticky top-4 z-50 w-full px-4 sm:px-6 max-w-5xl mx-auto font-sans">
-      {/* Floating Pill Container with Glassmorphism */}
-      <div className="rounded-full border border-white/15 bg-black/70 backdrop-blur-2xl shadow-[0_12px_40px_-10px_rgba(0,0,0,0.8)] px-4 sm:px-6 h-13 flex items-center justify-between transition-all duration-300">
-        
-        {/* Left: Brand Wordmark & Pill Badge */}
-        <div 
-          onClick={onOpenChat} 
-          className="flex items-center gap-2.5 cursor-pointer select-none group"
-        >
-          <div className="w-7 h-7 rounded-full bg-white text-black flex items-center justify-center font-bold text-xs shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-            C
-          </div>
-          <span className="font-extrabold text-sm tracking-tight text-white uppercase font-mono">
-            CHATPRO
-          </span>
-        </div>
-
-        {/* Center: Navigation Links */}
-        {currentView === 'landing' && (
-          <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-neutral-400">
-            <button 
-              onClick={() => scrollToSection('product')} 
-              className="hover:text-white transition-colors cursor-pointer tracking-wide"
-            >
-              Product
-            </button>
-            <button 
-              onClick={() => scrollToSection('features')} 
-              className="hover:text-white transition-colors cursor-pointer tracking-wide"
-            >
-              Features
-            </button>
-            <button 
-              onClick={() => scrollToSection('security')} 
-              className="hover:text-white transition-colors cursor-pointer tracking-wide"
-            >
-              Security
-            </button>
-            <button 
-              onClick={() => scrollToSection('roles')} 
-              className="hover:text-white transition-colors cursor-pointer tracking-wide"
-            >
-              Roles
-            </button>
-          </nav>
-        )}
-
-        {/* Right: Pill Actions */}
-        <div className="flex items-center gap-2">
-          {currentUser ? (
-            <div className="flex items-center gap-2">
-              {hasModRole && onOpenAdmin && (
-                <button
-                  onClick={onOpenAdmin}
-                  className="px-3 py-1.5 text-xs font-medium rounded-full border border-white/15 hover:border-white text-white bg-white/5 transition-colors flex items-center gap-1.5"
-                  title="Control Panel"
-                >
-                  <Shield className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Console</span>
-                </button>
-              )}
-
-              <button
-                onClick={onOpenChat}
-                className="px-4 py-1.5 text-xs font-semibold rounded-full btn-mono-primary flex items-center gap-1 shadow-sm"
-              >
-                <span>Launch</span>
-                <ArrowRight className="w-3 h-3" />
-              </button>
-
-              <button
-                onClick={logout}
-                className="p-1.5 text-neutral-400 hover:text-white rounded-full hover:bg-white/10 transition-colors"
-                title="Sign Out"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => onOpenAuth('login')}
-                className="px-3 py-1.5 text-xs font-medium text-neutral-400 hover:text-white transition-colors cursor-pointer"
-              >
-                Sign In
-              </button>
-
-              <button
-                onClick={() => onOpenAuth('register')}
-                className="px-4 py-1.5 text-xs font-semibold rounded-full btn-mono-primary shadow-[0_0_15px_rgba(255,255,255,0.2)] cursor-pointer"
-              >
-                Get Started
-              </button>
-            </div>
-          )}
-
-          {/* Theme Toggle Button */}
-          <button
-            onClick={toggleTheme}
-            className="relative z-50 pointer-events-auto p-2 rounded-full text-neutral-600 hover:text-black dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-neutral-800" />}
-          </button>
-
-          {/* Mobile hamburger */}
-          {currentView === 'landing' && (
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-1.5 text-neutral-400 hover:text-white rounded-full hover:bg-white/10"
-            >
-              {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            </button>
-          )}
-        </div>
-
+    <header className="site-nav" aria-label="Primary navigation">
+      <a className="brand" href="/" onClick={() => setOpen(false)} aria-label="ChatPro home"><span className="brand-mark" aria-hidden="true">C</span><span>ChatPro</span></a>
+      {currentView === 'landing' && <nav className="desktop-nav"><button type="button" onClick={() => go('product')}>Product</button><button type="button" onClick={() => go('features')}>Features</button><button type="button" onClick={() => go('security')}>Security</button></nav>}
+      <div className="nav-actions">
+        {currentUser ? <><button type="button" className="cta cta-primary" onClick={onOpenChat}>Open inbox <ArrowRight size={15} aria-hidden="true" /></button>{hasModRole && onOpenAdmin && <button type="button" className="icon-button" onClick={onOpenAdmin} aria-label="Open administration"><Shield size={17} /></button>}<button type="button" className="icon-button" onClick={() => void logout()} aria-label="Sign out"><LogOut size={17} /></button></> : <><button type="button" className="cta cta-secondary" onClick={() => onOpenAuth('login')}>Sign in</button><button type="button" className="cta cta-primary" onClick={() => onOpenAuth('register')}>Create account</button></>}
+        <button type="button" className="icon-button" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Use light theme' : 'Use dark theme'}>{theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}</button>
+        {currentView === 'landing' && <button type="button" className="icon-button mobile-menu-button" onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-label={open ? 'Close menu' : 'Open menu'}>{open ? <X size={19} /> : <Menu size={19} />}</button>}
       </div>
-
-      {/* Floating Mobile Drawer */}
-      {mobileMenuOpen && currentView === 'landing' && (
-        <div className="md:hidden mt-2 rounded-2xl border border-white/15 bg-black/85 backdrop-blur-2xl p-4 space-y-2 text-xs font-medium text-neutral-300 shadow-2xl">
-          <button 
-            onClick={() => scrollToSection('product')}
-            className="block w-full text-left py-2 hover:text-white"
-          >
-            Product
-          </button>
-          <button 
-            onClick={() => scrollToSection('features')}
-            className="block w-full text-left py-2 hover:text-white"
-          >
-            Features
-          </button>
-          <button 
-            onClick={() => scrollToSection('security')}
-            className="block w-full text-left py-2 hover:text-white"
-          >
-            Security
-          </button>
-          <button 
-            onClick={() => scrollToSection('roles')}
-            className="block w-full text-left py-2 hover:text-white"
-          >
-            Roles
-          </button>
-        </div>
-      )}
+      {open && currentView === 'landing' && <nav className="mobile-nav"><button type="button" onClick={() => go('product')}>Product</button><button type="button" onClick={() => go('features')}>Features</button><button type="button" onClick={() => go('security')}>Security</button><a href="mailto:hello@chatpro.app" onClick={() => setOpen(false)}>Email ChatPro</a></nav>}
     </header>
   );
 };
