@@ -11,10 +11,9 @@ service cloud.firestore {
     function currentUserRole() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role; }
     function isSystemOwner() {
       return isSignedIn() && (
-        (request.auth.token.email_verified == true && request.auth.token.email == 'anuragyadav3835@gmail.com') ||
         (hasUserDoc() && currentUserRole() == 'owner') ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'owner'
+        (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'owner')
       );
     }
     function isSystemAdmin() {
@@ -22,7 +21,11 @@ service cloud.firestore {
         (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
           get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['admin', 'owner']);
     }
-    function isSystemMaintainer() { return isSystemAdmin() || (hasUserDoc() && currentUserRole() in ['maintainer', 'admin', 'owner']); }
+    function isSystemMaintainer() {
+      return isSystemAdmin() || (hasUserDoc() && currentUserRole() in ['maintainer', 'admin', 'owner']) ||
+        (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['maintainer', 'admin', 'owner']);
+    }
 
     match /admins/{adminId} {
       allow read: if isSystemMaintainer();
@@ -52,8 +55,8 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
       allow update: if isSignedIn() && (
-        resource.data.senderId == request.auth.uid &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'text', 'edited', 'editedAt', 'deleted', 'reactions', 'readBy', 'status']) ||
+        (resource.data.senderId == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'text', 'edited', 'editedAt', 'deleted', 'reactions', 'readBy', 'status'])) ||
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'readBy', 'status']) ||
         isSystemMaintainer()
       );
@@ -86,7 +89,8 @@ service cloud.firestore {
       match /messages/{messageId} {
         allow read: if isSignedIn() && (isConversationParticipant(conversationId) || isSystemAdmin());
         allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid && (isConversationParticipant(conversationId) || isSystemAdmin());
-        allow update: if isSystemAdmin() || (isSignedIn() && resource.data.senderId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'text', 'edited', 'editedAt', 'deleted', 'reactions', 'readBy', 'status'])) ||
+        allow update: if isSystemAdmin() ||
+          (isSignedIn() && resource.data.senderId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'text', 'edited', 'editedAt', 'deleted', 'reactions', 'readBy', 'status'])) ||
           (isConversationParticipant(conversationId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'readBy', 'status']));
         allow delete: if isSystemAdmin() || (isSignedIn() && resource.data.senderId == request.auth.uid);
       }
