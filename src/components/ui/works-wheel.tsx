@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { cn } from "@/src/lib/utils";
+import { cn } from "../../lib/utils";
 
 export interface WorksWheelItem { title: string; image: string; href?: string; }
 export interface WorksWheelProps extends Omit<React.ComponentPropsWithoutRef<"section">, "children"> { items: WorksWheelItem[]; label?: string; action?: string; }
