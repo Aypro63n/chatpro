@@ -74,6 +74,13 @@ img, video { max-width: 100%; }
 .works-wheel-stage { position: relative; min-width: 0; min-height: 28rem; overflow: hidden; perspective: 900px; outline: none; }
 .works-wheel-item { position: absolute; top: 50%; left: 50%; width: min(72%, 34rem); aspect-ratio: 1.45; overflow: hidden; border-radius: .8rem; background: #f4f4f5; color: #fff; text-decoration: none; transition: transform 400ms cubic-bezier(.2,.7,.2,1), opacity 400ms ease; }
 .works-wheel-item img { width: 100%; height: 100%; object-fit: cover; filter: saturate(.8); }
+.works-wheel-overlay { position: absolute; inset: auto 0 0; display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding: 1rem; background: #111; color: #fff; }
+.works-wheel-action { font-size: .78rem; color: #e4e4e7; }
+.works-wheel-label { position: absolute; left: 3%; bottom: 6%; max-width: 15rem; font-size: clamp(1.4rem, 3vw, 2.3rem); font-weight: 600; letter-spacing: -.04em; }
+.works-wheel-index { display: flex; flex-direction: column; align-items: stretch; gap: .25rem; padding-top: 1rem; }
+.works-wheel-index button { border: 0; border-bottom: 1px solid #e5e5e5; padding: .65rem 0; background: transparent; color: #737373; text-align: left; font-size: .8rem; }
+.works-wheel-index button[aria-selected="true"] { color: #111; border-color: #111; }
+@media (max-width: 720px) { .site-nav { min-height: 4rem; } .desktop-nav { display: none; } .mobile-menu-button { display: inline-grid; } .nav-actions .cta-secondary { display: none; } .nav-actions { gap: .35rem; } .nav-actions .cta { min-height: 2.4rem; padding: .5rem .7rem; font-size: .8rem; } .works-wheel { grid-template-columns: 1fr; min-height: 0; padding: 1rem 0; } .works-wheel-stage { min-height: 21rem; } .works-wheel-item { width: 88%; } .works-wheel-index { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1rem; } .not-found-page, .legal-page { padding: 2rem 1.25rem; } }
 .works-wheel-overlay { position: absolute; inset: auto 0 0; display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding: 1rem; background: #09090b; color: #fff; }
 .works-wheel-action { font-size: .78rem; color: #d4d4d8; }
 .works-wheel-label { position: absolute; left: 3%; bottom: 6%; max-width: 15rem; font-size: clamp(1.4rem, 3vw, 2.3rem); font-weight: 600; letter-spacing: -.04em; }
