@@ -144,16 +144,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
 
       {/* Minimal Premium Navbar */}
       <header className="sticky top-4 z-50 w-full px-4 sm:px-6 max-w-6xl mx-auto font-sans">
-        <div className="rounded-full border border-neutral-200 bg-white/80 backdrop-blur-2xl shadow-[0_10px_30px_rgba(0,0,0,0.06)] px-5 sm:px-8 h-14 flex items-center justify-between transition-all">
+        <div className="rounded-full  bg-white/80 backdrop-blur-2xl shadow-[0_10px_30px_rgba(0,0,0,0.06)] px-5 sm:px-8 h-14 flex items-center justify-between transition-all">
           
           <div 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
             className="flex items-center gap-2.5 cursor-pointer select-none group"
           >
-            <div className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center font-bold text-xs shadow-sm">
+            <div className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center font-semibold text-xs shadow-sm">
               C
             </div>
-            <span className="font-extrabold text-sm tracking-tight text-black uppercase font-mono">
+            <span className="font-semibold text-sm tracking-tight text-black uppercase font-mono">
               CHATPRO
             </span>
           </div>
@@ -175,7 +175,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
             </button>
             <button
               onClick={() => scrollTo('register-login-section')}
-              className="px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-full bg-black text-white hover:bg-neutral-800 transition-all cursor-pointer shadow-xs"
+              className="px-5 py-2 text-xs font-semibold uppercase tracking-wider rounded-md border border-black bg-transparent text-black hover:bg-black hover:text-white transition-all cursor-pointer"
             >
               Get Started
             </button>
@@ -191,7 +191,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden absolute top-16 left-4 right-4 bg-white/95 backdrop-blur-3xl border border-neutral-200 rounded-2xl shadow-xl p-4 flex flex-col gap-4 text-sm font-semibold z-50">
+          <div className="md:hidden absolute top-16 left-4 right-4 bg-white/95 backdrop-blur-3xl  rounded-2xl shadow-xl p-4 flex flex-col gap-4 text-sm font-semibold z-50">
             <button onClick={() => { scrollTo('interface-preview'); setMobileMenuOpen(false); }} className="text-left py-2 hover:text-neutral-600">Preview</button>
             <button onClick={() => { scrollTo('features'); setMobileMenuOpen(false); }} className="text-left py-2 hover:text-neutral-600">Features</button>
             <button onClick={() => { scrollTo('showcase'); setMobileMenuOpen(false); }} className="text-left py-2 hover:text-neutral-600">Showcase</button>
@@ -199,27 +199,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
             <button onClick={() => { scrollTo('how-it-works'); setMobileMenuOpen(false); }} className="text-left py-2 hover:text-neutral-600">How It Works</button>
             <div className="h-px bg-neutral-100 my-2" />
             <button onClick={() => { scrollTo('register-login-section'); setMobileMenuOpen(false); }} className="text-left py-2 hover:text-neutral-600">Sign In</button>
-            <button onClick={() => { scrollTo('register-login-section'); setMobileMenuOpen(false); }} className="text-center py-3 bg-black text-white rounded-full text-xs font-bold uppercase tracking-wider mt-2">Get Started</button>
+            <button onClick={() => { scrollTo('register-login-section'); setMobileMenuOpen(false); }} className="text-left py-3 bg-black text-white rounded-full text-xs font-semibold uppercase tracking-wider mt-2">Get Started</button>
           </div>
         )}
       </header>
 
       {/* HERO SECTION */}
-      <section className="relative pt-24 pb-20 md:pt-36 md:pb-28 z-10 flex flex-col justify-center items-center text-center">
+      <section className="relative pt-24 pb-20 md:pt-36 md:pb-28 z-10 flex flex-col justify-start items-start text-left">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-neutral-200 bg-[#F8F9FA] text-xs font-mono tracking-wide text-neutral-600 mb-8 shadow-xs">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full  bg-[#F8F9FA] text-xs font-mono tracking-wide text-neutral-600 mb-8 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-black animate-pulse" />
             <span>Real-Time Encrypted Messaging Architecture</span>
           </div>
 
           <div className="overflow-hidden mb-2">
-            <h1 className="animate-line-up text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter text-black uppercase leading-[0.95]">
+            <h1 className="animate-line-up text-5xl sm:text-7xl md:text-8xl font-semibold tracking-tighter text-black uppercase leading-[0.95]">
               Real people.
             </h1>
           </div>
           <div className="overflow-hidden mb-8">
-            <h1 className="animate-line-up-delayed text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter text-neutral-400 uppercase leading-[0.95]">
+            <h1 className="animate-line-up-delayed text-5xl sm:text-7xl md:text-8xl font-semibold tracking-tighter text-neutral-400 uppercase leading-[0.95]">
               Real conversations.
             </h1>
           </div>
@@ -231,7 +231,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20">
             <button
               onClick={() => scrollTo('register-login-section')}
-              className="w-full sm:w-auto px-8 py-4 text-xs font-bold tracking-wider uppercase bg-black text-white hover:bg-neutral-800 rounded-full flex items-center justify-center gap-2 cursor-pointer shadow-[0_10px_30px_rgba(0,0,0,0.15)] transition-all"
+              className="w-full sm:w-auto px-8 py-4 text-xs font-semibold tracking-wider uppercase bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-all"
             >
               <span>Get Started Free</span>
               <ArrowRight className="w-4 h-4" />
@@ -239,7 +239,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
 
             <button
               onClick={() => scrollTo('interface-preview')}
-              className="w-full sm:w-auto px-8 py-4 text-xs font-semibold tracking-wider uppercase bg-[#F8F9FA] hover:bg-neutral-200 text-neutral-900 border border-neutral-200 rounded-full flex items-center justify-center gap-2 cursor-pointer transition-all"
+              className="w-full sm:w-auto px-8 py-4 text-xs font-semibold tracking-wider uppercase bg-[#F8F9FA] hover:bg-neutral-200 text-neutral-900  rounded-full flex items-center justify-center gap-2 cursor-pointer transition-all"
             >
               <span>Explore Preview</span>
               <ChevronDown className="w-4 h-4" />
@@ -250,13 +250,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
           <div id="interface-preview" className="relative mt-8 scroll-item">
             
             {/* Floating UI Widget 1: Online Status */}
-            <div className="absolute -top-6 -left-6 sm:left-4 z-20 hidden sm:flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white border border-neutral-200 shadow-xl text-xs font-medium text-neutral-800 animate-bounce">
+            <div className="absolute -top-6 -left-6 sm:left-4 z-20 hidden sm:flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white  shadow-xl text-xs font-medium text-neutral-800 animate-bounce">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
               <span>alex_chen is online</span>
             </div>
 
             {/* Floating UI Widget 2: Typing Indicator */}
-            <div className="absolute -bottom-6 -right-6 sm:right-6 z-20 hidden sm:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white border border-neutral-200 shadow-xl text-xs font-medium text-neutral-800">
+            <div className="absolute -bottom-6 -right-6 sm:right-6 z-20 hidden sm:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white  shadow-xl text-xs font-medium text-neutral-800">
               <div className="flex gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-neutral-400 animate-bounce" style={{ animationDelay: '0ms' }} />
                 <span className="w-1.5 h-1.5 rounded-full bg-neutral-400 animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -266,24 +266,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
             </div>
 
             {/* Main Mockup Container */}
-            <div className="relative z-10 max-w-5xl mx-auto bg-white border border-neutral-200 rounded-[32px] p-6 sm:p-10 shadow-[0_30px_90px_rgba(0,0,0,0.08)] text-left">
+            <div className="relative z-10 max-w-5xl mx-auto bg-white  rounded-[32px] p-6 sm:p-10 shadow-[0_30px_90px_rgba(0,0,0,0.08)] text-left">
               
               <div className="flex items-center justify-between pb-5 border-b border-neutral-100 mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                  <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-semibold text-xs shadow-sm">
                     #
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-black">global_chat</span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#F8F9FA] text-neutral-600 border border-neutral-200">
+                      <span className="font-semibold text-sm text-black">global_chat</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#F8F9FA] text-neutral-600 ">
                         Live Room
                       </span>
                     </div>
                     <p className="text-xs text-neutral-500">All verified ChatPro community members</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#F8F9FA] border border-neutral-200 text-[11px] font-mono text-neutral-600">
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#F8F9FA]  text-[11px] font-mono text-neutral-600">
                   <span className="w-1.5 h-1.5 rounded-full bg-black" />
                   <span>Real-time onSnapshot</span>
                 </div>
@@ -292,10 +292,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
               <div className="space-y-4 mb-6">
                 
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-neutral-200 text-neutral-800 flex items-center justify-center text-xs font-bold shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-neutral-200 text-neutral-800 flex items-center justify-center text-xs font-semibold shrink-0">
                     E
                   </div>
-                  <div className="p-4 rounded-3xl rounded-tl-sm bg-[#F8F9FA] border border-neutral-200 max-w-md">
+                  <div className="p-4 rounded-3xl rounded-tl-sm bg-[#F8F9FA]  max-w-md">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-semibold text-xs text-black">elena_rostova</span>
                       <span className="text-[10px] text-neutral-400">10:24 AM</span>
@@ -309,7 +309,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
                 <div className="flex items-start gap-3 justify-end">
                   <div className="p-4 rounded-3xl rounded-tr-sm bg-black text-white max-w-md shadow-md">
                     <div className="flex items-center justify-between gap-4 mb-1">
-                      <span className="font-bold text-xs text-white">alex_chen</span>
+                      <span className="font-semibold text-xs text-white">alex_chen</span>
                       <span className="text-[10px] text-neutral-400 flex items-center gap-1">
                         Just now <CheckCheck className="w-3.5 h-3.5 text-white" />
                       </span>
@@ -318,7 +318,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
                       Completely smooth. Zero unnecessary clutter, pure pill buttons, and robust Firestore security rules.
                     </p>
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-xs font-semibold shrink-0">
                     A
                   </div>
                 </div>
@@ -326,13 +326,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
               </div>
 
               <div className="pt-4 border-t border-neutral-100 flex items-center gap-3">
-                <div className="flex-1 px-4 py-3 rounded-full bg-[#F8F9FA] border border-neutral-200 text-xs text-neutral-500 flex items-center justify-between">
+                <div className="flex-1 px-4 py-3 rounded-full bg-[#F8F9FA]  text-xs text-neutral-500 flex items-center justify-between">
                   <span>Message #global_chat...</span>
                   <Radio className="w-3.5 h-3.5 text-neutral-400" />
                 </div>
                 <button 
                   onClick={() => scrollTo('register-login-section')}
-                  className="px-6 py-3 rounded-full bg-black text-white hover:bg-neutral-800 text-xs font-bold uppercase tracking-wider cursor-pointer shrink-0"
+                  className="px-6 py-3 rounded-full bg-black text-white hover:bg-neutral-800 text-xs font-semibold uppercase tracking-wider cursor-pointer shrink-0"
                 >
                   Send ↵
                 </button>
@@ -349,11 +349,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
       <section id="features" className="py-24 relative z-10 bg-[#F8F9FA] border-t border-b border-neutral-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="text-center max-w-2xl mx-auto mb-16 scroll-item">
-            <span className="px-3.5 py-1 rounded-full border border-neutral-200 bg-white text-xs font-mono uppercase tracking-wider text-neutral-600 mb-4 inline-block shadow-xs">
+          <div className="text-left max-w-2xl mx-auto mb-16 scroll-item">
+            <span className="px-3.5 py-1 rounded-full  bg-white text-xs font-mono uppercase tracking-wider text-neutral-600 mb-4 inline-block shadow-xs">
               Architectural Capabilities
             </span>
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-black uppercase mt-2">
+            <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight text-black uppercase mt-2">
               Designed for focus.
             </h2>
             <p className="text-sm text-neutral-600 mt-3 font-normal">
@@ -364,15 +364,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
             
             <div 
-              className="md:col-span-7 bg-white border border-neutral-200 rounded-[28px] p-8 sm:p-10 flex flex-col justify-between scroll-item shadow-sm hover:shadow-md transition-all"
+              className="md:col-span-7 bg-white p-8 sm:p-10 flex flex-col justify-between scroll-item shadow-sm hover:shadow-md transition-all"
               style={{ transitionDelay: '50ms' }}
             >
               <div>
                 <div className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center mb-6 shadow-md">
-                  <Zap className="w-6 h-6" />
+                  <img src="https://api.dicebear.com/7.x/shapes/svg?seed=zap&backgroundColor=ffffff" alt="Zap" className="w-full h-full rounded-full" />
                 </div>
                 <span className="text-xs font-mono uppercase text-neutral-400 tracking-wider">01 // REAL-TIME MESSAGING</span>
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-black mt-1 mb-3">
+                <h3 className="text-2xl sm:text-3xl font-semibold text-black mt-1 mb-3">
                   Messages that arrive instantly.
                 </h3>
                 <p className="text-sm text-neutral-600 leading-relaxed max-w-md">
@@ -386,15 +386,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
             </div>
 
             <div 
-              className="md:col-span-5 bg-white border border-neutral-200 rounded-[28px] p-8 flex flex-col justify-between scroll-item shadow-sm hover:shadow-md transition-all"
+              className="md:col-span-5 bg-white p-8 flex flex-col justify-between scroll-item shadow-sm hover:shadow-md transition-all"
               style={{ transitionDelay: '100ms' }}
             >
               <div>
-                <div className="w-12 h-12 rounded-full bg-[#F8F9FA] border border-neutral-200 flex items-center justify-center mb-6 text-black">
-                  <Globe className="w-6 h-6" />
+                <div className="w-12 h-12 rounded-full bg-[#F8F9FA]  flex items-center justify-center mb-6 text-black">
+                  <img src="https://api.dicebear.com/7.x/shapes/svg?seed=globe&backgroundColor=f8f9fa" alt="Globe" className="w-full h-full rounded-full" />
                 </div>
                 <span className="text-xs font-mono uppercase text-neutral-400 tracking-wider">02 // GLOBAL CHAT</span>
-                <h3 className="text-xl sm:text-2xl font-extrabold text-black mt-1 mb-3">
+                <h3 className="text-xl sm:text-2xl font-semibold text-black mt-1 mb-3">
                   One shared room for everyone.
                 </h3>
                 <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed">
@@ -402,22 +402,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
                 </p>
               </div>
               <div className="mt-6">
-                <span className="px-3 py-1 rounded-full bg-[#F8F9FA] border border-neutral-200 text-xs font-mono text-neutral-600">
+                <span className="px-3 py-1 rounded-full bg-[#F8F9FA]  text-xs font-mono text-neutral-600">
                   Public Channel
                 </span>
               </div>
             </div>
 
             <div 
-              className="md:col-span-5 bg-white border border-neutral-200 rounded-[28px] p-8 flex flex-col justify-between scroll-item shadow-sm hover:shadow-md transition-all"
+              className="md:col-span-5 bg-white p-8 flex flex-col justify-between scroll-item shadow-sm hover:shadow-md transition-all"
               style={{ transitionDelay: '150ms' }}
             >
               <div>
-                <div className="w-12 h-12 rounded-full bg-[#F8F9FA] border border-neutral-200 flex items-center justify-center mb-6 text-black">
-                  <MessageSquare className="w-6 h-6" />
+                <div className="w-12 h-12 rounded-full bg-[#F8F9FA]  flex items-center justify-center mb-6 text-black">
+                  <img src="https://api.dicebear.com/7.x/shapes/svg?seed=msg&backgroundColor=f8f9fa" alt="Message" className="w-full h-full rounded-full" />
                 </div>
                 <span className="text-xs font-mono uppercase text-neutral-400 tracking-wider">03 // PRIVATE CONVERSATIONS</span>
-                <h3 className="text-xl sm:text-2xl font-extrabold text-black mt-1 mb-3">
+                <h3 className="text-xl sm:text-2xl font-semibold text-black mt-1 mb-3">
                   Direct chats with real people.
                 </h3>
                 <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed">
@@ -430,15 +430,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
             </div>
 
             <div 
-              className="md:col-span-7 bg-white border border-neutral-200 rounded-[28px] p-8 sm:p-10 flex flex-col justify-between scroll-item shadow-sm hover:shadow-md transition-all"
+              className="md:col-span-7 bg-white p-8 sm:p-10 flex flex-col justify-between scroll-item shadow-sm hover:shadow-md transition-all"
               style={{ transitionDelay: '200ms' }}
             >
               <div>
                 <div className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center mb-6 shadow-md">
-                  <Lock className="w-6 h-6" />
+                  <img src="https://api.dicebear.com/7.x/shapes/svg?seed=lock&backgroundColor=ffffff" alt="Lock" className="w-full h-full rounded-full" />
                 </div>
                 <span className="text-xs font-mono uppercase text-neutral-400 tracking-wider">04 // SECURE BACKEND</span>
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-black mt-1 mb-3">
+                <h3 className="text-2xl sm:text-3xl font-semibold text-black mt-1 mb-3">
                   Protected conversations and permissions.
                 </h3>
                 <p className="text-sm text-neutral-600 leading-relaxed max-w-md">
@@ -446,7 +446,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
                 </p>
               </div>
               <div className="mt-8 flex flex-wrap gap-2">
-                <span className="px-3 py-1 rounded-full bg-black text-white text-xs font-bold font-mono">OWNER</span>
+                <span className="px-3 py-1 rounded-full bg-black text-white text-xs font-semibold font-mono">OWNER</span>
                 <span className="px-3 py-1 rounded-full bg-neutral-200 text-neutral-800 text-xs font-mono">ADMIN</span>
                 <span className="px-3 py-1 rounded-full bg-[#F8F9FA] text-neutral-600 text-xs font-mono">MAINTAINER</span>
                 <span className="px-3 py-1 rounded-full bg-[#F8F9FA] text-neutral-500 text-xs font-mono">MEMBER</span>
@@ -462,11 +462,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
       <section id="showcase" className="py-24 relative z-10 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="text-center max-w-2xl mx-auto mb-16 scroll-item">
-            <span className="px-3.5 py-1 rounded-full border border-neutral-200 bg-[#F8F9FA] text-xs font-mono uppercase tracking-wider text-neutral-600 mb-4 inline-block shadow-xs">
+          <div className="text-left max-w-2xl mx-auto mb-16 scroll-item">
+            <span className="px-3.5 py-1 rounded-full  bg-[#F8F9FA] text-xs font-mono uppercase tracking-wider text-neutral-600 mb-4 inline-block shadow-xs">
               Editorial Showcase
             </span>
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-black uppercase mt-2">
+            <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight text-black uppercase mt-2">
               Inside ChatPro.
             </h2>
             <p className="text-sm text-neutral-600 mt-3 font-normal">
@@ -476,31 +476,31 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            <div className="bg-[#F8F9FA] border border-neutral-200 rounded-[28px] p-6 scroll-item">
-              <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-bold mb-4">
+            <div className="bg-[#F8F9FA] p-6 scroll-item">
+              <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-semibold mb-4">
                 01
               </div>
-              <h4 className="font-bold text-base text-black mb-2">Sidebar & Channels</h4>
+              <h4 className="font-semibold text-base text-black mb-2">Sidebar & Channels</h4>
               <p className="text-xs text-neutral-600 leading-relaxed">
                 Quickly switch between Global Chat, direct messages, and group rooms with real-time unread counts.
               </p>
             </div>
 
-            <div className="bg-[#F8F9FA] border border-neutral-200 rounded-[28px] p-6 scroll-item" style={{ transitionDelay: '100ms' }}>
-              <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-bold mb-4">
+            <div className="bg-[#F8F9FA] p-6 scroll-item" style={{ transitionDelay: '100ms' }}>
+              <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-semibold mb-4">
                 02
               </div>
-              <h4 className="font-bold text-base text-black mb-2">Rich Composer</h4>
+              <h4 className="font-semibold text-base text-black mb-2">Rich Composer</h4>
               <p className="text-xs text-neutral-600 leading-relaxed">
                 Send text, images, videos, voice recordings, and camera snapshots instantly with read receipts.
               </p>
             </div>
 
-            <div className="bg-[#F8F9FA] border border-neutral-200 rounded-[28px] p-6 scroll-item" style={{ transitionDelay: '200ms' }}>
-              <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-bold mb-4">
+            <div className="bg-[#F8F9FA] p-6 scroll-item" style={{ transitionDelay: '200ms' }}>
+              <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-semibold mb-4">
                 03
               </div>
-              <h4 className="font-bold text-base text-black mb-2">Presence & Settings</h4>
+              <h4 className="font-semibold text-base text-black mb-2">Presence & Settings</h4>
               <p className="text-xs text-neutral-600 leading-relaxed">
                 Monitor online contacts, toggle dark/light themes, and customize dark background patterns.
               </p>
@@ -513,22 +513,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
 
       {/* SECURITY SECTION */}
       <section id="security" className="py-24 relative z-10 bg-[#F8F9FA] border-t border-b border-neutral-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center scroll-item">
-          <span className="px-3.5 py-1 rounded-full border border-neutral-200 bg-white text-xs font-mono uppercase tracking-wider text-neutral-600 mb-4 inline-block shadow-xs">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-left scroll-item">
+          <span className="px-3.5 py-1 rounded-full  bg-white text-xs font-mono uppercase tracking-wider text-neutral-600 mb-4 inline-block shadow-xs">
             Private By Design
           </span>
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-black uppercase mt-2 mb-6">
+          <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight text-black uppercase mt-2 mb-6">
             Secure Firebase Architecture.
           </h2>
           <p className="text-base text-neutral-600 leading-relaxed max-w-2xl mx-auto mb-10">
             ChatPro utilizes robust Firebase authentication and strict Firestore security rules. Every message, reaction, and profile update is governed by cryptographic permission checks ensuring absolute data integrity.
           </p>
           <div className="flex items-center justify-center gap-4">
-            <span className="px-4 py-2 rounded-full bg-white border border-neutral-200 text-xs font-mono text-neutral-700 shadow-xs flex items-center gap-2">
+            <span className="px-4 py-2 rounded-full bg-white  text-xs font-mono text-neutral-700 shadow-xs flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
               <span>Verified Firestore Rules</span>
             </span>
-            <span className="px-4 py-2 rounded-full bg-white border border-neutral-200 text-xs font-mono text-neutral-700 shadow-xs flex items-center gap-2">
+            <span className="px-4 py-2 rounded-full bg-white  text-xs font-mono text-neutral-700 shadow-xs flex items-center gap-2">
               <Lock className="w-4 h-4 text-black" />
               <span>Secure Token Auth</span>
             </span>
@@ -539,35 +539,35 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
       {/* HOW IT WORKS SECTION */}
       <section id="how-it-works" className="py-24 relative z-10 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 scroll-item">
-            <span className="px-3.5 py-1 rounded-full border border-neutral-200 bg-[#F8F9FA] text-xs font-mono uppercase tracking-wider text-neutral-600 mb-4 inline-block shadow-xs">
+          <div className="text-left max-w-2xl mx-auto mb-16 scroll-item">
+            <span className="px-3.5 py-1 rounded-full  bg-[#F8F9FA] text-xs font-mono uppercase tracking-wider text-neutral-600 mb-4 inline-block shadow-xs">
               Simple Onboarding
             </span>
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-black uppercase mt-2">
+            <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight text-black uppercase mt-2">
               How it works.
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-[#F8F9FA] border border-neutral-200 rounded-[28px] p-8 text-left scroll-item">
+            <div className="bg-[#F8F9FA] p-8 text-left scroll-item">
               <span className="text-xs font-mono text-neutral-400 uppercase tracking-widest block mb-4">Step 01</span>
-              <h4 className="font-extrabold text-lg text-black mb-2">Create your account</h4>
+              <h4 className="font-semibold text-lg text-black mb-2">Create your account</h4>
               <p className="text-xs text-neutral-600 leading-relaxed">
                 Sign in instantly using Google 1-click auth, email credentials, or anonymous guest mode.
               </p>
             </div>
 
-            <div className="bg-[#F8F9FA] border border-neutral-200 rounded-[28px] p-8 text-left scroll-item" style={{ transitionDelay: '100ms' }}>
+            <div className="bg-[#F8F9FA] p-8 text-left scroll-item" style={{ transitionDelay: '100ms' }}>
               <span className="text-xs font-mono text-neutral-400 uppercase tracking-widest block mb-4">Step 02</span>
-              <h4 className="font-extrabold text-lg text-black mb-2">Find real people</h4>
+              <h4 className="font-semibold text-lg text-black mb-2">Find real people</h4>
               <p className="text-xs text-neutral-600 leading-relaxed">
                 Browse the member directory or join Global Chat to meet verified users instantly.
               </p>
             </div>
 
-            <div className="bg-[#F8F9FA] border border-neutral-200 rounded-[28px] p-8 text-left scroll-item" style={{ transitionDelay: '200ms' }}>
+            <div className="bg-[#F8F9FA] p-8 text-left scroll-item" style={{ transitionDelay: '200ms' }}>
               <span className="text-xs font-mono text-neutral-400 uppercase tracking-widest block mb-4">Step 03</span>
-              <h4 className="font-extrabold text-lg text-black mb-2">Start a conversation</h4>
+              <h4 className="font-semibold text-lg text-black mb-2">Start a conversation</h4>
               <p className="text-xs text-neutral-600 leading-relaxed">
                 Send instant messages, photos, voice notes, and reactions in real time.
               </p>
@@ -580,11 +580,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
       <section id="register-login-section" className="py-24 relative z-10 bg-[#F8F9FA] border-t border-neutral-200">
         <div className="max-w-md mx-auto px-4 sm:px-6">
           
-          <div className="text-center mb-8 scroll-item">
-            <span className="px-3.5 py-1 rounded-full border border-neutral-200 bg-white text-xs font-mono uppercase tracking-wider text-neutral-600 mb-3 inline-block shadow-xs">
+          <div className="text-left mb-8 scroll-item">
+            <span className="px-3.5 py-1 rounded-full  bg-white text-xs font-mono uppercase tracking-wider text-neutral-600 mb-3 inline-block shadow-xs">
               Entry Portal
             </span>
-            <h2 className="text-3xl font-extrabold tracking-tight text-black uppercase">
+            <h2 className="text-3xl font-semibold tracking-tight text-black uppercase">
               Join ChatPro
             </h2>
             <p className="text-xs text-neutral-500 mt-1">
@@ -592,14 +592,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
             </p>
           </div>
 
-          <div className="bg-white border border-neutral-200 rounded-[28px] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.06)] scroll-item">
+          <div className="bg-white p-8 shadow-[0_20px_60px_rgba(0,0,0,0.06)] scroll-item">
             
             <div className="space-y-3 mb-6">
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={authLoading}
-                className="w-full py-3.5 px-4 rounded-full bg-[#F8F9FA] hover:bg-neutral-200 text-neutral-900 border border-neutral-200 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all"
+                className="w-full py-3.5 px-4 rounded-xl border-2 border-neutral-200 hover:border-neutral-300 text-neutral-900 bg-white text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all"
               >
                 <span>Google 1-Click Sign In</span>
               </button>
@@ -608,13 +608,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
                 type="button"
                 onClick={handleGuestSignIn}
                 disabled={authLoading}
-                className="w-full py-3.5 px-4 rounded-full border border-neutral-200 bg-white hover:bg-[#F8F9FA] text-neutral-700 text-xs font-medium uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                className="w-full py-3.5 px-4 rounded-full  bg-white hover:bg-[#F8F9FA] text-neutral-700 text-xs font-medium uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 <span>Instant Guest Mode</span>
               </button>
             </div>
 
-            <div className="relative my-6 text-center">
+            <div className="relative my-6 text-left">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-neutral-200" />
               </div>
@@ -629,18 +629,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
               </div>
             )}
 
-            <div className="grid grid-cols-2 p-1 bg-[#F8F9FA] border border-neutral-200 rounded-full mb-5 text-xs font-mono uppercase">
+            <div className="grid grid-cols-2 p-1 bg-[#F8F9FA]  rounded-full mb-5 text-xs font-mono uppercase">
               <button
                 type="button"
                 onClick={() => { setAuthTab('login'); setAuthError(null); }}
-                className={`py-2 rounded-full transition-all cursor-pointer ${authTab === 'login' ? 'bg-black text-white font-bold shadow-xs' : 'text-neutral-500 hover:text-black'}`}
+                className={`py-2 rounded-full transition-all cursor-pointer ${authTab === 'login' ? 'bg-black text-white font-semibold shadow-xs' : 'text-neutral-500 hover:text-black'}`}
               >
                 Sign In
               </button>
               <button
                 type="button"
                 onClick={() => { setAuthTab('register'); setAuthError(null); }}
-                className={`py-2 rounded-full transition-all cursor-pointer ${authTab === 'register' ? 'bg-black text-white font-bold shadow-xs' : 'text-neutral-500 hover:text-black'}`}
+                className={`py-2 rounded-full transition-all cursor-pointer ${authTab === 'register' ? 'bg-black text-white font-semibold shadow-xs' : 'text-neutral-500 hover:text-black'}`}
               >
                 Register
               </button>
@@ -657,7 +657,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       placeholder="Alex Chen"
-                      className="w-full px-4 py-3 bg-[#F8F9FA] border border-neutral-200 rounded-full text-neutral-900 text-xs placeholder-neutral-400 focus:outline-none focus:border-black transition-colors"
+                      className="w-full px-4 py-3 bg-[#F8F9FA]  rounded-full text-neutral-900 text-xs placeholder-neutral-400 focus:outline-none focus:border-black transition-colors"
                     />
                   </div>
 
@@ -669,7 +669,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
                       value={username}
                       onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                       placeholder="alex_chen"
-                      className="w-full px-4 py-3 bg-[#F8F9FA] border border-neutral-200 rounded-full text-neutral-900 text-xs placeholder-neutral-400 focus:outline-none focus:border-black font-mono transition-colors"
+                      className="w-full px-4 py-3 bg-[#F8F9FA]  rounded-full text-neutral-900 text-xs placeholder-neutral-400 focus:outline-none focus:border-black font-mono transition-colors"
                     />
                   </div>
                 </>
@@ -683,7 +683,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@domain.com"
-                  className="w-full px-4 py-3 bg-[#F8F9FA] border border-neutral-200 rounded-full text-neutral-900 text-xs placeholder-neutral-400 focus:outline-none focus:border-black transition-colors"
+                  className="w-full px-4 py-3 bg-[#F8F9FA]  rounded-full text-neutral-900 text-xs placeholder-neutral-400 focus:outline-none focus:border-black transition-colors"
                 />
               </div>
 
@@ -695,14 +695,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 bg-[#F8F9FA] border border-neutral-200 rounded-full text-neutral-900 text-xs placeholder-neutral-400 focus:outline-none focus:border-black transition-colors"
+                  className="w-full px-4 py-3 bg-[#F8F9FA]  rounded-full text-neutral-900 text-xs placeholder-neutral-400 focus:outline-none focus:border-black transition-colors"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={authLoading}
-                className="w-full mt-2 py-3.5 text-xs font-bold uppercase tracking-wider bg-black text-white hover:bg-neutral-800 rounded-full flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+                className="w-full mt-2 py-3.5 text-xs font-semibold uppercase tracking-wider bg-black text-white hover:bg-neutral-800 rounded-full flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
               >
                 {authLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 <span>{authTab === 'login' ? 'Sign In to ChatPro' : 'Create Account'}</span>
@@ -715,9 +715,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
       </section>
 
       {/* FINAL CTA SECTION */}
-      <section className="py-24 bg-white text-center border-t border-neutral-200">
+      <section className="py-24 bg-white text-left border-t border-neutral-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 scroll-item">
-          <h2 className="text-4xl sm:text-6xl font-black tracking-tighter text-black uppercase mb-4">
+          <h2 className="text-4xl sm:text-6xl font-semibold tracking-tighter text-black uppercase mb-4">
             Your conversations. Your people.
           </h2>
           <p className="text-neutral-600 text-sm sm:text-base max-w-lg mx-auto mb-8 font-normal">
@@ -725,7 +725,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
           </p>
           <button
             onClick={() => scrollTo('register-login-section')}
-            className="px-8 py-4 text-xs font-bold tracking-wider uppercase bg-black text-white hover:bg-neutral-800 rounded-full inline-flex items-center gap-2 cursor-pointer shadow-lg transition-all"
+            className="px-8 py-4 text-xs font-semibold tracking-wider uppercase bg-indigo-600 text-white hover:opacity-90 rounded-xl inline-flex items-center gap-2 cursor-pointer shadow-xl transition-all"
           >
             <span>Get Started Now</span>
             <ArrowRight className="w-4 h-4" />
@@ -737,16 +737,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
       <footer className="py-16 border-t border-neutral-200 bg-[#F8F9FA] relative z-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="bg-white border border-neutral-200 rounded-[28px] p-8 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xs">
+          <div className="bg-white p-8 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xs">
             <div
               className="flex items-center gap-3 cursor-pointer"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
-              <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center font-bold text-xs">
+              <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center font-semibold text-xs">
                 C
               </div>
               <div>
-                <div className="font-extrabold text-sm uppercase tracking-tight text-black">
+                <div className="font-semibold text-sm uppercase tracking-tight text-black">
                   CHATPRO
                 </div>
                 <p className="text-[11px] text-neutral-500">
@@ -764,7 +764,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin 
                 <button onClick={() => scrollTo('how-it-works')} className="hover:text-black transition-colors cursor-pointer">How It Works</button>
               </div>
 
-              <div className="flex items-center gap-4 text-xs font-mono mt-2">
+              <div className="flex flex-wrap items-center justify-start sm:justify-start gap-4 text-xs font-mono mt-2">
                 <a href="mailto:support@chatpro.app" className="text-neutral-500 hover:text-black transition-colors flex items-center gap-1">
                   <Mail className="w-3.5 h-3.5" /> support@chatpro.app
                 </a>
