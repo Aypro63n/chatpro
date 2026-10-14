@@ -39,6 +39,7 @@ import {
   MicOff,
   Camera,
   CameraOff,
+  CheckCircle2,
   Image as ImageIcon,
   Sun,
   Moon,
@@ -136,6 +137,13 @@ export const ChatLayout: React.FC = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [sendSuccess, setSendSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!sendSuccess) return;
+    const timer = window.setTimeout(() => setSendSuccess(null), 2600);
+    return () => window.clearTimeout(timer);
+  }, [sendSuccess]);
   const [typingUsers, setTypingUsers] = useState<Record<string, string>>({}); // uid -> displayName
   
   // Modals
@@ -662,8 +670,9 @@ export const ChatLayout: React.FC = () => {
         fileName: file.name,
         fileSize: file.size
       });
+      setSendSuccess(type === 'image' ? 'Photo sent.' : type === 'video' ? 'Video sent.' : 'File sent.');
     } catch (err: any) {
-      setSendError('File upload failed.');
+      setSendError(err?.message || 'File upload failed. Please try again.');
     } finally {
       setUploadingProgress(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -689,8 +698,9 @@ export const ChatLayout: React.FC = () => {
         fileName: `Photo_${new Date().toLocaleTimeString()}.jpg`,
         fileSize: file.size
       });
+      setSendSuccess('Photo sent.');
     } catch (err: any) {
-      setSendError('Camera capture upload failed.');
+      setSendError(err?.message || 'Camera capture upload failed. Please try again.');
     } finally {
       setUploadingProgress(null);
       if (cameraInputRef.current) cameraInputRef.current.value = '';
@@ -785,7 +795,7 @@ export const ChatLayout: React.FC = () => {
     warm: 'bg-amber-950/20 dark:bg-[#180e04]',
     obsidian: 'bg-neutral-950',
     carbon: 'bg-zinc-950',
-    aurora: 'bg-gradient-to-tr from-slate-950 via-indigo-950 to-slate-950',
+    aurora: 'bg-indigo-950/20',
   };
 
   const getConversationInfo = (conv: Conversation) => {
@@ -857,7 +867,7 @@ export const ChatLayout: React.FC = () => {
   };
 
   return (
-    <div className="h-[100dvh] min-h-[100dvh] w-full flex overflow-hidden bg-[#F8F9FA] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
+    <div className="chat-layout h-[100dvh] min-h-[100dvh] w-full flex overflow-hidden bg-[#FDF4F5] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
       
       {/* Network offline banner */}
       {!isOnline && (
@@ -981,7 +991,7 @@ export const ChatLayout: React.FC = () => {
                 : 'bg-indigo-50/40 dark:bg-indigo-950/20 border-indigo-200/40 dark:border-indigo-900/40 hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40'
             }`}
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/20">
+            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/20">
               <Globe className="w-5 h-5" />
             </div>
 
@@ -1140,7 +1150,7 @@ export const ChatLayout: React.FC = () => {
               onClick={() => setShowInfoPanel(!showInfoPanel)}
             >
               {activeConversation.id === GLOBAL_CHAT_ID ? (
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center shadow-xs">
+                <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
                   <Globe className="w-4 h-4" />
                 </div>
               ) : (
@@ -1290,6 +1300,14 @@ export const ChatLayout: React.FC = () => {
             <button onClick={() => setSendError(null)} className="text-[10px] text-red-500 hover:underline">
               Dismiss
             </button>
+          </div>
+        )}
+
+        {/* Send success toast */}
+        {sendSuccess && !sendError && (
+          <div className="px-4 py-1.5 bg-lime-100 text-lime-800 border-b border-lime-200 text-xs flex items-center gap-2">
+            <CheckCircle2 className="w-3.5 h-3.5 text-lime-600" />
+            <span>{sendSuccess}</span>
           </div>
         )}
 
@@ -1822,7 +1840,7 @@ export const ChatLayout: React.FC = () => {
             {/* Avatar & Header */}
             <div className="text-center">
               {activeConversation.id === GLOBAL_CHAT_ID ? (
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20 mb-3">
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20 mb-3">
                   <Globe className="w-8 h-8" />
                 </div>
               ) : (
@@ -2038,7 +2056,7 @@ export const ChatLayout: React.FC = () => {
           <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-8 flex flex-col items-center text-white shadow-2xl relative overflow-hidden">
             
             {/* Background ambient glow */}
-            <div className="absolute inset-0 bg-gradient-to-b from-indigo-600/10 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-indigo-600/5 pointer-events-none" />
 
             {/* Call type badge */}
             <span className="px-3 py-1 rounded-full text-xs font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-6 uppercase tracking-wider">

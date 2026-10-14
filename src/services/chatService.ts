@@ -21,7 +21,7 @@ import {
   uploadBytesResumable, 
   getDownloadURL 
 } from 'firebase/storage';
-import { db, storage, handleFirestoreError, OperationType } from '../lib/firebase';
+import { auth, db, storage, handleFirestoreError, OperationType } from '../lib/firebase';
 import { 
   Conversation, 
   UserProfile, 
@@ -41,7 +41,7 @@ export const getGlobalChatConversation = (): Conversation => ({
   type: 'global',
   name: 'Global Chat',
   description: 'Public community room for all verified ChatPro users',
-  photoURL: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=200&q=80',
+  photoURL: '/hero.png',
   participants: [],
   lastMessage: null,
   updatedAt: Date.now(),
@@ -539,6 +539,34 @@ export const subscribeToAllRegisteredUsers = (
   );
 };
 
+const IMAGE_COMPRESS_MAX_DIM = 1600;
+const IMAGE_COMPRESS_QUALITY = 0.82;
+
+// Downscale + re-encode images client-side before upload (acts as image compression).
+const compressImageFile = async (file: File): Promise<Blob> => {
+  if (!file.type.startsWith('image/') || file.type === 'image/svg+xml' || file.type === 'image/gif') return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, IMAGE_COMPRESS_MAX_DIM / Math.max(bitmap.width, bitmap.height));
+    if (scale >= 1 && file.size < 300 * 1024) return file;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close?.();
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', IMAGE_COMPRESS_QUALITY));
+    return blob && blob.size < file.size ? blob : file;
+  } catch {
+    return file;
+  }
+};
+
+// Upload media to Firebase Storage and return a download URL.
+// (Previously returned a base64 data-URL, which blew past Firestore's ~890KB
+// document limit and made image messages fail silently — especially noticeable
+// for Google-signed-in accounts sending camera photos.)
 export const uploadMediaFile = async (
   file: File | Blob,
   fileName: string,
@@ -549,18 +577,27 @@ export const uploadMediaFile = async (
     throw new Error('File exceeds the 15MB size limit.');
   }
 
-  if (onProgress) onProgress(25);
+  const payload = file instanceof File ? await compressImageFile(file) : file;
+  if (onProgress) onProgress(15);
 
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (onProgress) onProgress(100);
-      resolve(reader.result as string);
-    };
-    reader.onerror = () => {
-      reject(new Error('Failed to read file data.'));
-    };
-    reader.readAsDataURL(file);
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error('You must be signed in to send files.');
+
+  const safeName = `${Date.now()}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 60)}`;
+  const storageRef = ref(storage, `media/${uid}/${safeName}`);
+  const task = uploadBytesResumable(storageRef, payload);
+
+  return new Promise<string>((resolve, reject) => {
+    task.on(
+      'state_changed',
+      (snap) => { if (onProgress) onProgress(15 + Math.round((snap.bytesTransferred / Math.max(snap.totalBytes, 1)) * 80)); },
+      (err) => reject(new Error(err.code === 'storage/unauthorized' ? 'Storage access denied. Please sign in again and retry.' : 'Upload failed. Please try again.')),
+      () => {
+        getDownloadURL(task.snapshot.ref)
+          .then((url) => { if (onProgress) onProgress(100); resolve(url); })
+          .catch(() => reject(new Error('Could not fetch the uploaded file URL.')));
+      }
+    );
   });
 };
 
