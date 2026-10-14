@@ -1,17 +1,20 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import {fileURLToPath, URL} from 'node:url';
 import {defineConfig} from 'vite';
 
+// Fully ESM / native-config-loader safe:
+// - No `__dirname` (unsupported by Vite's planned `configLoader: 'native'`).
+// - No `node:` built-in imports at all, so the config loads natively
+//   without any transpilation step on Vercel.
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
         // Point '@' at the project root so imports like '@/src/...' and
-        // '@/components/...' both resolve. (Uses import.meta.dirname instead
-        // of __dirname for compatibility with Vite's native config loader.)
-        '@': fileURLToPath(new URL('.', import.meta.url)),
+        // '@/components/...' both resolve. `import.meta.dirname` is the
+        // drop-in replacement for `__dirname` (Node >= 20.11).
+        '@': import.meta.dirname,
       },
     },
     server: {
