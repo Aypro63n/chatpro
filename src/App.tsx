@@ -36,7 +36,7 @@ const AppContent: React.FC = () => {
   };
 
   if (window.location.pathname !== '/' && window.location.pathname !== '/index.html') {
-    return <NotFound onHome={() => { window.history.pushState({}, '', '/'); window.location.reload(); }} />;
+    return <NotFound />;
   }
 
   if (loading) {
