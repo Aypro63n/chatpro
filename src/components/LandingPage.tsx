@@ -1,30 +1,115 @@
-import React from 'react';
-import { ArrowRight, Check, LockKeyhole, MessageSquare, Paperclip, Search, Send, Users } from 'lucide-react';
-import { WorksWheel, type WorksWheelItem } from './ui/works-wheel';
+import React, { useState } from 'react';
+import { Menu, X } from 'lucide-react';
 
 interface LandingPageProps { onGetStarted: () => void; onLogin: () => void; }
-const previewMessages = [
-  { name: 'Aarav Mehta', text: 'The launch notes are ready for review.', time: '09:41', own: false },
-  { name: 'You', text: 'I will review them this afternoon.', time: '09:42', own: true },
-  { name: 'Aarav Mehta', text: 'I added the final files to the thread.', time: '09:43', own: false },
-];
-const wheelItems: WorksWheelItem[] = [
-  { title: 'Real-time chat', image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1000&q=72', href: '#features' },
-  { title: 'AI collaboration', image: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1000&q=72', href: '#features' },
-  { title: 'Secure cloud', image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1000&q=72', href: '#security' },
-  { title: 'Theme control', image: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=1000&q=72', href: '#features' },
-];
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin }) => (
-  <div className="landing-page">
-    <header className="landing-nav"><a className="landing-brand" href="/" aria-label="ChatPro home"><span className="landing-brand-mark">C</span><span>ChatPro</span></a><nav className="landing-links" aria-label="Landing page navigation"><a href="#features">Features</a><a href="#security">Security</a><a href="/privacy">Privacy</a></nav><div className="landing-nav-actions"><button type="button" className="landing-link-button" onClick={onLogin}>Sign in</button><button type="button" className="landing-button landing-button-dark" onClick={onGetStarted}>Sign up free <ArrowRight size={15} aria-hidden="true" /></button></div></header>
-    <main>
-      <section className="landing-hero" id="product"><div className="landing-hero-copy"><p className="landing-kicker">CHATPRO / REAL-TIME COLLABORATION</p><h1>Work through conversations, not around them.</h1><p className="landing-lede">A focused messaging workspace for developers, creators, and teams who need context, files, and decisions in one place.</p><div className="landing-actions"><button type="button" className="landing-button landing-button-dark" onClick={onGetStarted}>Sign up free <ArrowRight size={15} aria-hidden="true" /></button><button type="button" className="landing-button landing-button-light" onClick={onLogin}>Explore Chat <ArrowRight size={15} aria-hidden="true" /></button></div><div className="landing-proof"><span><Check size={14} aria-hidden="true" /> Private by default</span><span><Check size={14} aria-hidden="true" /> Firebase-backed</span><span><Check size={14} aria-hidden="true" /> Built for teams</span></div></div><div className="chat-preview" aria-label="ChatPro application preview"><div className="preview-sidebar"><div className="preview-sidebar-top"><strong>Messages</strong><button type="button" aria-label="Search conversations"><Search size={15} /></button></div><div className="preview-search">Search conversations</div><div className="preview-thread preview-thread-active"><span className="preview-avatar">AM</span><span><strong>Aarav Mehta</strong><small>Final files are in the thread</small></span><time>09:43</time></div><div className="preview-thread"><span className="preview-avatar preview-avatar-muted">DS</span><span><strong>Design sync</strong><small>Three members</small></span><time>Tue</time></div><div className="preview-thread"><span className="preview-avatar preview-avatar-muted">PR</span><span><strong>Project room</strong><small>New message</small></span><time>Mon</time></div></div><div className="preview-conversation"><div className="preview-header"><span><strong>Aarav Mehta</strong><small>Available now</small></span><button type="button" aria-label="Conversation members"><Users size={17} /></button></div><div className="preview-messages">{previewMessages.map((message) => <div key={`${message.name}-${message.time}`} className={`preview-message-row ${message.own ? 'preview-message-own' : ''}`}><div className="preview-message"><small>{message.name} · {message.time}</small><p>{message.text}</p></div></div>)}</div><div className="preview-composer"><Paperclip size={16} aria-hidden="true" /><span>Write a message</span><button type="button" aria-label="Send message"><Send size={15} /></button></div></div></div></section>
-      <section className="landing-wheel-section" aria-labelledby="wheel-heading"><div className="landing-section-heading"><p className="landing-kicker">THE WORKSPACE, IN MOTION</p><h2 id="wheel-heading">One place for the work around every message.</h2></div><WorksWheel items={wheelItems} label="ChatPro capabilities" action="Explore" /></section>
-      <section className="landing-section landing-section-border" id="features"><div className="landing-section-heading"><p className="landing-kicker">CORE CAPABILITIES</p><h2>Clarity without the ceremony.</h2></div><div className="landing-feature-list"><article><MessageSquare size={20} aria-hidden="true" /><h3>Direct and group chat</h3><p>Move between one-to-one conversations and focused rooms without losing the thread.</p></article><article><Paperclip size={20} aria-hidden="true" /><h3>Media and voice notes</h3><p>Share images, video, files, and voice notes where people can respond in context.</p></article><article><Users size={20} aria-hidden="true" /><h3>Presence that helps</h3><p>See who is available and make the next handoff without another status meeting.</p></article></div></section>
-      <section className="landing-section landing-security" id="security"><div><p className="landing-kicker">SECURITY AS A BASELINE</p><h2>Your conversations stay with the people in them.</h2></div><div><p>ChatPro uses Firebase Authentication, Firestore, and Storage with authenticated access rules for accounts, messages, and media.</p><a className="landing-text-link" href="/privacy">Read the privacy policy <ArrowRight size={15} aria-hidden="true" /></a></div></section>
-      <section className="landing-section landing-final-cta"><LockKeyhole size={20} aria-hidden="true" /><div><h2>Open a better workspace.</h2><p>Start with a private account and bring the conversation together.</p></div><button type="button" className="landing-button landing-button-dark" onClick={onGetStarted}>Create account <ArrowRight size={15} aria-hidden="true" /></button></section>
-    </main>
-    <footer className="landing-footer"><a className="landing-brand" href="/" aria-label="ChatPro home"><span className="landing-brand-mark">C</span><span>ChatPro</span></a><div className="landing-footer-links"><a href="#features">Features</a><a href="#security">Security</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:hello@chatpro.app">hello@chatpro.app</a></div><p>© 2026 ChatPro. Made by Anurag Yadav.</p></footer>
-  </div>
-);
+const PHONE = '+919876543210';
+
+export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = () => setMenuOpen(false);
+  const scrollTo = (id: string) => { closeMenu(); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+
+  return (
+    <div className="landing-page">
+      <header className="landing-nav">
+        <a className="landing-brand" href="/" aria-label="ChatPro home"><span className="landing-brand-mark" aria-hidden="true">C</span><span>ChatPro</span></a>
+        <nav className="landing-links" aria-label="Landing page navigation">
+          <a href="#features" onClick={(e) => { e.preventDefault(); scrollTo('features'); }}>Features</a>
+          <a href="#security" onClick={(e) => { e.preventDefault(); scrollTo('security'); }}>Security</a>
+          <a href="/privacy">Privacy</a>
+        </nav>
+        <div className="landing-nav-actions">
+          <button type="button" className="btn btn-ghost" onClick={onLogin}>Sign in</button>
+          <button type="button" className="btn btn-primary" onClick={onGetStarted}>Create free account</button>
+          <button type="button" className="icon-button mobile-menu-button" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen} aria-label={menuOpen ? 'Close menu' : 'Open menu'}>{menuOpen ? <X size={19} /> : <Menu size={19} />}</button>
+        </div>
+        {menuOpen && (
+          <nav className="mobile-nav" aria-label="Mobile navigation">
+            <a href="#features" onClick={(e) => { e.preventDefault(); scrollTo('features'); }}>Features</a>
+            <a href="#security" onClick={(e) => { e.preventDefault(); scrollTo('security'); }}>Security</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/terms">Terms</a>
+            <a href={`tel:${PHONE}`}>Call ChatPro</a>
+            <a href="mailto:hello@chatpro.app">Email ChatPro</a>
+            <button type="button" className="btn btn-secondary" onClick={() => { closeMenu(); onLogin(); }}>Sign in</button>
+          </nav>
+        )}
+      </header>
+
+      <main>
+        {/* Hero */}
+        <section className="landing-hero" id="product">
+          <div className="landing-hero-copy">
+            <p className="landing-kicker">CHATPRO / REAL-TIME COLLABORATION</p>
+            <h1>Work through conversations, not around them.</h1>
+            <p className="landing-lede">A focused messaging workspace for developers, creators, and teams who need context, files, and decisions in one place.</p>
+            <div className="landing-actions">
+              <button type="button" className="btn btn-primary" onClick={onGetStarted}>Create free account</button>
+              <button type="button" className="btn btn-secondary" onClick={onLogin}>Explore Chat</button>
+            </div>
+            <p className="landing-proof">Private by default · Firebase-backed · Built for teams</p>
+          </div>
+          <img className="landing-hero-image" src="/hero.png" alt="Illustration of people collaborating through ChatPro conversations" width={1200} height={900} loading="eager" />
+        </section>
+
+        {/* Features — simple numbered list, no cards */}
+        <section className="landing-section" id="features">
+          <p className="landing-kicker">CORE CAPABILITIES</p>
+          <h2>Clarity without the ceremony.</h2>
+          <ol className="landing-feature-list">
+            <li>
+              <h3>Direct and group chat</h3>
+              <p>Move between one-to-one conversations and focused rooms without losing the thread.</p>
+            </li>
+            <li>
+              <h3>Media and voice notes</h3>
+              <p>Share images, video, files, and voice notes where people can respond in context.</p>
+            </li>
+            <li>
+              <h3>Presence that helps</h3>
+              <p>See who is available and make the next handoff without another status meeting.</p>
+            </li>
+          </ol>
+          <div className="landing-actions">
+            <button type="button" className="btn btn-lime" onClick={onGetStarted}>Start chatting free</button>
+          </div>
+        </section>
+
+        {/* Security */}
+        <section className="landing-section landing-security" id="security">
+          <p className="landing-kicker">SECURITY AS A BASELINE</p>
+          <h2>Your conversations stay with the people in them.</h2>
+          <p>ChatPro uses Firebase Authentication, Firestore, and Storage with authenticated access rules for accounts, messages, and media.</p>
+          <div className="landing-actions">
+            <a className="btn btn-outline" href="/privacy">Read the privacy policy</a>
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section className="landing-section landing-final-cta">
+          <h2>Open a better workspace.</h2>
+          <p>Start with a private account and bring the conversation together.</p>
+          <div className="landing-actions">
+            <button type="button" className="btn btn-crimson" onClick={onGetStarted}>Join ChatPro today</button>
+          </div>
+        </section>
+      </main>
+
+      <footer className="landing-footer">
+        <div className="landing-footer-top">
+          <a className="landing-brand" href="/" aria-label="ChatPro home"><span className="landing-brand-mark" aria-hidden="true">C</span><span>ChatPro</span></a>
+          <nav className="landing-footer-links" aria-label="Footer navigation">
+            <a href="#features" onClick={(e) => { e.preventDefault(); scrollTo('features'); }}>Features</a>
+            <a href="#security" onClick={(e) => { e.preventDefault(); scrollTo('security'); }}>Security</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/terms">Terms</a>
+            <a href={`tel:${PHONE}`} aria-label={`Call ChatPro at ${PHONE}`}>{PHONE}</a>
+            <a href="mailto:hello@chatpro.app">hello@chatpro.app</a>
+          </nav>
+        </div>
+        <p className="landing-footer-copy">© {new Date().getFullYear()} ChatPro. Made by Anurag Yadav.</p>
+      </footer>
+    </div>
+  );
+};
