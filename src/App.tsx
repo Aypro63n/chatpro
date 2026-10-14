@@ -6,6 +6,7 @@ import { ChatLayout } from './components/Chat/ChatLayout';
 import { AuthModal } from './components/AuthModal';
 import { AdminPanelModal } from './components/Admin/AdminPanelModal';
 import { NotFound } from './components/NotFound';
+import { LegalPage, type LegalPageKind } from './components/LegalPage';
 
 const AppContent: React.FC = () => {
   const { currentUser, loading } = useAuth();
@@ -13,36 +14,20 @@ const AppContent: React.FC = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
   const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const path = window.location.pathname.replace(/\/$/, '') || '/';
+  const legalKind: LegalPageKind | null = path === '/privacy' ? 'privacy' : path === '/terms' ? 'terms' : null;
 
   React.useEffect(() => {
-    document.title = currentView === 'chat' ? 'ChatPro — inbox' : 'ChatPro — conversations with clarity';
-  }, [currentView]);
+    document.title = legalKind === 'privacy' ? 'ChatPro Privacy Policy' : legalKind === 'terms' ? 'ChatPro Terms and Conditions' : currentView === 'chat' ? 'ChatPro inbox' : 'ChatPro conversations with clarity';
+  }, [currentView, legalKind]);
 
-  React.useEffect(() => {
-    if (currentUser) {
-      setCurrentView('chat');
-      setAuthModalOpen(false);
-    }
-  }, [currentUser]);
+  React.useEffect(() => { if (currentUser) { setCurrentView('chat'); setAuthModalOpen(false); } }, [currentUser]);
+  const handleOpenAuth = (mode: 'login' | 'register' = 'login') => { setAuthModalMode(mode); setAuthModalOpen(true); };
+  const home = () => { window.history.pushState({}, '', '/'); window.location.reload(); };
 
-  const handleOpenChat = () => {
-    if (!currentUser) { setAuthModalMode('login'); setAuthModalOpen(true); }
-    else setCurrentView('chat');
-  };
-
-  const handleOpenAuth = (mode: 'login' | 'register' = 'login') => {
-    setAuthModalMode(mode);
-    setAuthModalOpen(true);
-  };
-
-  if (window.location.pathname !== '/' && window.location.pathname !== '/index.html') {
-    return <NotFound onHome={() => { window.history.pushState({}, '', '/'); window.location.reload(); }} />;
-  }
-
-  if (loading) {
-    return <main className="not-found-page" aria-live="polite"><p className="eyebrow">CHATPRO</p><h1>Preparing your workspace.</h1><p className="page-lede">Connecting your account securely.</p></main>;
-  }
-
+  if (legalKind) return <LegalPage kind={legalKind} onHome={home} />;
+  if (path !== '/') return <NotFound onHome={home} />;
+  if (loading) return <main className="not-found-page" aria-live="polite"><p className="eyebrow">CHATPRO</p><h1>Preparing your workspace.</h1><p className="page-lede">Connecting your account securely.</p></main>;
   return (
     <div className={`w-full flex flex-col ${currentView === 'chat' ? 'h-[100dvh] min-h-[100dvh] overflow-hidden' : 'min-h-screen'}`}>
       <div className="flex-1 flex flex-col">
@@ -55,6 +40,4 @@ const AppContent: React.FC = () => {
   );
 };
 
-export default function App() {
-  return <ThemeProvider><AuthProvider><AppContent /></AuthProvider></ThemeProvider>;
-}
+export default function App() { return <ThemeProvider><AuthProvider><AppContent /></AuthProvider></ThemeProvider>; }
