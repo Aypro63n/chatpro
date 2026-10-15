@@ -1,8 +1,6 @@
 node_modules/
-.env
-.env.local
-.env.*.local
-dist/
-*.bundle
-launch-resolved.bundle
-pr-resolved.bundle
+*.log
+*.tmp
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
