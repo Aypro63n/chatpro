@@ -86,6 +86,7 @@ import {
   unblockUser,
   deleteConversation
 } from '../../services/chatService';
+import { generateClaudeReply, isClaudeConfigured } from '../../services/claudeService';
 import { VoiceRecorder } from './VoiceRecorder';
 import { MediaViewerModal } from './MediaViewerModal';
 import { CreateGroupModal } from './CreateGroupModal';
@@ -613,6 +614,28 @@ export const ChatLayout: React.FC = () => {
       await sendMessage(activeConversation, userProfile, textToSend, 'text', {
         replyTo: reply
       });
+
+      // Claude assistant replies inside its own direct conversation.
+      const isAssistantConv = activeConversation.name === 'ChatPro Assistant'
+        || (activeConversation.participants?.includes('chatpro_assistant') ?? false);
+      if (isAssistantConv && isClaudeConfigured()) {
+        const historySnapshot = [...messages];
+        try {
+          const replyText = await generateClaudeReply(textToSend, historySnapshot, userProfile.uid);
+          if (replyText) {
+            const assistantProfile: UserProfile = {
+              uid: 'chatpro_assistant',
+              displayName: 'ChatPro Assistant',
+              username: 'assistant',
+              email: '',
+              photoURL: ''
+            };
+            await sendMessage(activeConversation, assistantProfile, replyText, 'text');
+          }
+        } catch (aiErr: any) {
+          setSendError(aiErr?.message || 'Assistant could not respond. Try again.');
+        }
+      }
     } catch (err: any) {
       console.error('Send error:', err);
       setSendError('Message failed to send. Please verify your connection.');
