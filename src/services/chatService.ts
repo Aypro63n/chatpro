@@ -593,12 +593,15 @@ export const uploadMediaFile = async (
 
     if (error) throw error;
 
-    const { data: { publicUrl } } = supabase.storage
+    // Use createSignedUrl for private bucket access
+    const { data: signedData, error: signedError } = await supabase.storage
       .from('chat-media')
-      .getPublicUrl(data.path);
+      .createSignedUrl(data.path, 60 * 60); // 1 hour expiration
+
+    if (signedError) throw signedError;
 
     if (onProgress) onProgress(100);
-    return publicUrl;
+    return signedData.signedUrl;
   } catch (err: any) {
     throw new Error(err.message || 'Upload failed. Please try again.');
   }
