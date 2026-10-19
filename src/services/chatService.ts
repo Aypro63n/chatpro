@@ -1,34 +1,35 @@
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  setDoc, 
-  updateDoc, 
+import {
+  collection,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
   deleteDoc,
-  query, 
-  where, 
-  getDocs, 
-  limit, 
-  arrayUnion, 
-  arrayRemove, 
+  query,
+  where,
+  getDocs,
+  limit,
+  arrayUnion,
+  arrayRemove,
   increment,
   onSnapshot,
   orderBy,
   Unsubscribe
 } from 'firebase/firestore';
-import { 
-  ref, 
-  uploadBytesResumable, 
-  getDownloadURL 
+import {
+  ref,
+  uploadBytesResumable,
+  getDownloadURL
 } from 'firebase/storage';
 import { auth, db, storage, handleFirestoreError, OperationType } from '../lib/firebase';
-import { 
-  Conversation, 
-  UserProfile, 
-  Message, 
-  MessageType, 
-  ReplyReference, 
-  Report, 
+import { supabase } from '../lib/supabase';
+import {
+  Conversation,
+  UserProfile,
+  Message,
+  MessageType,
+  ReplyReference,
+  Report,
   Announcement,
   UserRole,
   ROLE_HIERARCHY,
@@ -563,10 +564,7 @@ const compressImageFile = async (file: File): Promise<Blob> => {
   }
 };
 
-// Upload media to Firebase Storage and return a download URL.
-// (Previously returned a base64 data-URL, which blew past Firestore's ~890KB
-// document limit and made image messages fail silently — especially noticeable
-// for Google-signed-in accounts sending camera photos.)
+// Upload media to Supabase Storage and return a download URL.
 export const uploadMediaFile = async (
   file: File | Blob,
   fileName: string,
@@ -584,21 +582,29 @@ export const uploadMediaFile = async (
   if (!uid) throw new Error('You must be signed in to send files.');
 
   const safeName = `${Date.now()}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 60)}`;
-  const storageRef = ref(storage, `media/${uid}/${safeName}`);
-  const task = uploadBytesResumable(storageRef, payload);
+  const filePath = `media/${uid}/${safeName}`;
 
-  return new Promise<string>((resolve, reject) => {
-    task.on(
-      'state_changed',
-      (snap) => { if (onProgress) onProgress(15 + Math.round((snap.bytesTransferred / Math.max(snap.totalBytes, 1)) * 80)); },
-      (err) => reject(new Error(err.code === 'storage/unauthorized' ? 'Storage access denied. Please sign in again and retry.' : 'Upload failed. Please try again.')),
-      () => {
-        getDownloadURL(task.snapshot.ref)
-          .then((url) => { if (onProgress) onProgress(100); resolve(url); })
-          .catch(() => reject(new Error('Could not fetch the uploaded file URL.')));
-      }
-    );
-  });
+  try {
+    const { data, error } = await supabase.storage
+      .from('chat-media')
+      .upload(filePath, payload, {
+        upsert: false
+      });
+
+    if (error) throw error;
+
+    // Use createSignedUrl for private bucket access
+    const { data: signedData, error: signedError } = await supabase.storage
+      .from('chat-media')
+      .createSignedUrl(data.path, 60 * 60); // 1 hour expiration
+
+    if (signedError) throw signedError;
+
+    if (onProgress) onProgress(100);
+    return signedData.signedUrl;
+  } catch (err: any) {
+    throw new Error(err.message || 'Upload failed. Please try again.');
+  }
 };
 
 export const submitReport = async (

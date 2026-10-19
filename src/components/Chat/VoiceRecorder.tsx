@@ -138,7 +138,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onSendAudio, onCan
   }
 
   return (
-    <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-indigo-50 dark:bg-slate-900 border border-indigo-200 dark:border-slate-800 shadow-sm animate-in fade-in">
+    <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-emerald-50 dark:bg-slate-900 border border-emerald-200 dark:border-slate-800 shadow-sm animate-in fade-in">
       
       {/* Left: Recording indicator or play button */}
       <div className="flex items-center gap-3">
@@ -167,7 +167,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onSendAudio, onCan
           <div className="flex items-center gap-2">
             <button
               onClick={handleTogglePlay}
-              className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-500 transition-colors shadow-xs"
+              className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-500 transition-colors shadow-xs"
             >
               {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
             </button>
@@ -202,7 +202,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onSendAudio, onCan
           <button
             onClick={handleSend}
             title="Send voice note"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/20 transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md shadow-emerald-600/20 transition-all"
           >
             <span>Send</span>
             <Send className="w-3.5 h-3.5" />

@@ -1,43 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { onAuthChange } from "./firebase/authService";
-import ChatLayout from "./components/ChatLayout";
-import AuthModal from "./components/AuthModal";
-import LandingPage from "./components/LandingPage";
-import PrivacyPage from "./pages/PrivacyPage";
-import TermsPage from "./pages/TermsPage";
-import NotFound from "./pages/NotFound";
+import { useAuth } from "./context/AuthContext";
+import ChatLayout from "./components/Chat/ChatLayout";
+import { AuthModal } from "./components/AuthModal";
+import { LandingPage } from "./components/LandingPage";
+import { LegalPage } from "./components/LegalPage";
+import { NotFound } from "./components/NotFound";
 import type { User } from "./types";
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { currentUser, loading } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
   const [route, setRoute] = useState(() => window.location.pathname);
 
-  useEffect(() => {
-    return onAuthChange((fbUser) => {
-      if (!fbUser) {
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-      const nextUser: User = {
-        uid: fbUser.uid,
-        name: fbUser.displayName || fbUser.email?.split("@")[0] || "User",
-        email: fbUser.email || "",
-        photoURL: fbUser.photoURL || undefined,
-        role: "user",
-        status: "online",
-        lastSeen: Date.now(),
-        createdAt: Date.now(),
-      };
-      setUser(nextUser);
-      setLoading(false);
-    });
-  }, []);
-
-  // Lightweight client-side router so direct visits to /privacy and /terms
-  // render real pages instead of the 404 fallback.
   useEffect(() => {
     const sync = () => setRoute(window.location.pathname);
     window.addEventListener("popstate", sync);
@@ -58,16 +32,16 @@ export default function App() {
     );
   }
 
-  if (route === "/privacy") return <PrivacyPage onNavigate={navigate} />;
-  if (route === "/terms") return <TermsPage onNavigate={navigate} />;
-  if (route !== "/" && !["/chat"].includes(route)) return <NotFound onNavigate={navigate} />;
+  if (route === "/privacy") return <LegalPage kind="privacy" onHome={() => navigate("/")} />;
+  if (route === "/terms") return <LegalPage kind="terms" onHome={() => navigate("/")} />;
+  if (route !== "/" && route !== "/chat") return <NotFound />;
 
-  if (user) return <ChatLayout user={user} onSignOut={() => setUser(null)} />;
+  if (currentUser) return <ChatLayout user={currentUser} onSignOut={() => {}} />;
 
   return (
     <>
-      <LandingPage onGetStarted={() => setAuthOpen(true)} onNavigate={navigate} />
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onAuthenticated={setUser} />
+      <LandingPage onGetStarted={() => setAuthOpen(true)} onLogin={() => setAuthOpen(true)} onNavigate={navigate} />
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onAuthenticated={() => {}} />
     </>
   );
 }

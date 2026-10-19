@@ -1,113 +1,34 @@
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
-    }
+// 1. FIX: private conversation metadata leak — replace `allow list: if isSignedIn();`
+//    inside match /conversations/{conversationId} with:
+    allow list: if isSystemAdmin();
 
-    function isSignedIn() { return request.auth != null; }
-    function isOwnerUser(userId) { return isSignedIn() && request.auth.uid == userId; }
-    function hasUserDoc() { return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)); }
-    function currentUserRole() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role; }
-    function isSystemOwner() {
-      return isSignedIn() && (
-        (hasUserDoc() && currentUserRole() == 'owner') ||
-        (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'owner')
-      );
+// 2. FIX: admins can't read their own doc + no owner bootstrap.
+//    Replace the whole match /admins/{adminId} block with:
+    match /config/{docId} {
+      allow read: if isSignedIn();
+      allow write: if false;
     }
-    function isSystemAdmin() {
-      return isSystemOwner() || (hasUserDoc() && currentUserRole() in ['admin', 'owner']) ||
-        (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['admin', 'owner']);
-    }
-    function isSystemMaintainer() {
-      return isSystemAdmin() || (hasUserDoc() && currentUserRole() in ['maintainer', 'admin', 'owner']) ||
-        (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['maintainer', 'admin', 'owner']);
-    }
-
     match /admins/{adminId} {
-      allow read: if isSystemMaintainer();
-      allow create, update, delete: if isSystemOwner() && adminId != request.auth.uid;
+      allow get: if isSignedIn() && adminId == request.auth.uid;
+      allow list: if isSystemMaintainer();
+      allow create: if (isSystemOwner() && adminId != request.auth.uid) ||
+        (isSignedIn() && adminId == request.auth.uid && request.resource.data.role == 'owner' &&
+         exists(/databases/$(database)/documents/config/bootstrap) &&
+         get(/databases/$(database)/documents/config/bootstrap).data.allowOwnerBootstrap == true);
+      allow update, delete: if isSystemOwner() && adminId != request.auth.uid;
     }
 
-    match /users/{userId} {
-      allow read: if isSignedIn();
-      allow create: if isOwnerUser(userId) && request.resource.data.role == 'member';
-      allow update: if isSystemOwner() ||
-        (isSystemAdmin() && resource.data.role in ['member', 'maintainer'] &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'username', 'email', 'bio', 'photoURL', 'status', 'lastSeen', 'showOnlineStatus', 'readReceipts', 'blockedUsers', 'isSuspended', 'isMuted', 'muteUntil', 'role'])) ||
-        (isSystemMaintainer() && resource.data.role == 'member' &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isMuted', 'muteUntil'])) ||
-        (isOwnerUser(userId) &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'username', 'bio', 'photoURL', 'status', 'lastSeen', 'showOnlineStatus', 'readReceipts', 'blockedUsers', 'updatedAt']));
-      allow delete: if isSystemOwner() || (isSystemAdmin() && resource.data.role in ['member', 'maintainer']);
-    }
-
-    match /auditLogs/{logId} {
-      allow read: if isSystemMaintainer();
-      allow create: if isSystemMaintainer() && request.resource.data.actorUid == request.auth.uid;
-      allow update, delete: if false;
-    }
-
-    match /globalMessages/{messageId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
-      allow update: if isSignedIn() && (
-        (resource.data.senderId == request.auth.uid &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'text', 'edited', 'editedAt', 'deleted', 'reactions', 'readBy', 'status'])) ||
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'readBy', 'status']) ||
-        isSystemMaintainer()
-      );
-      allow delete: if isSignedIn() && (resource.data.senderId == request.auth.uid || isSystemMaintainer());
-    }
-
-    match /globalTyping/{userId} {
-      allow read: if isSignedIn();
-      allow write: if isOwnerUser(userId);
-    }
-
-    function isConversationParticipant(convId) {
-      let convPath = /databases/$(database)/documents/conversations/$(convId);
-      return exists(convPath) && get(convPath).data.participants is list && request.auth.uid in get(convPath).data.participants;
-    }
-    function isConversationAdmin(convId) {
-      let convPath = /databases/$(database)/documents/conversations/$(convId);
-      return exists(convPath) && get(convPath).data.admins is list && request.auth.uid in get(convPath).data.admins;
-    }
-
-    match /conversations/{conversationId} {
-      allow get: if isSignedIn() && (isConversationParticipant(conversationId) || isSystemAdmin());
-      allow list: if isSignedIn();
-      allow create: if isSignedIn() && request.resource.data.participants is list && request.auth.uid in request.resource.data.participants && request.resource.data.createdBy == request.auth.uid;
-      allow update: if isSystemAdmin() ||
-        (isConversationAdmin(conversationId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'description', 'photoURL', 'admins', 'participants', 'participantData', 'updatedAt'])) ||
-        (isConversationParticipant(conversationId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessage', 'unreadCounts', 'pinnedMessageId', 'updatedAt']));
-      allow delete: if isSystemAdmin() || (isSignedIn() && resource.data.createdBy == request.auth.uid);
-
-      match /messages/{messageId} {
-        allow read: if isSignedIn() && (isConversationParticipant(conversationId) || isSystemAdmin());
-        allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid && (isConversationParticipant(conversationId) || isSystemAdmin());
-        allow update: if isSystemAdmin() ||
-          (isSignedIn() && resource.data.senderId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'text', 'edited', 'editedAt', 'deleted', 'reactions', 'readBy', 'status'])) ||
-          (isConversationParticipant(conversationId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'readBy', 'status']));
-        allow delete: if isSystemAdmin() || (isSignedIn() && resource.data.senderId == request.auth.uid);
+// 3. ADD: per-user conversation index (the app reads this instead of listing
+//    /conversations). Add INSIDE match /users/{userId}, after its allow rules:
+      match /conversations/{convId} {
+        allow read: if isOwnerUser(userId);
+        allow create: if isSignedIn() && (isOwnerUser(userId) || isConversationParticipant(convId));
+        allow delete: if isOwnerUser(userId) || isSystemMaintainer();
       }
 
-      match /typing/{userId} {
-        allow read: if isSignedIn() && (isConversationParticipant(conversationId) || isSystemAdmin());
-        allow write: if isOwnerUser(userId) && isConversationParticipant(conversationId);
-      }
-    }
-
-    match /announcements/{announcementId} {
-      allow read: if isSignedIn();
-      allow write: if isSystemAdmin();
-    }
-    match /reports/{reportId} {
-      allow create: if isSignedIn() && request.resource.data.reportedBy == request.auth.uid;
-      allow read, update, delete: if isSystemMaintainer();
-    }
-  }
-}
+// 4. ADD: let any group member leave (removing only themselves).
+//    Add as an extra OR-branch in match /conversations/{conversationId} update:
+        (isConversationParticipant(conversationId) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participants', 'updatedAt']) &&
+          request.resource.data.participants.size() == resource.data.participants.size() - 1 &&
+          !(request.auth.uid in request.resource.data.participants))
