@@ -1,35 +1,35 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  MessageSquare, 
-  Search, 
-  Plus, 
-  Users, 
-  Settings as SettingsIcon, 
-  Shield, 
-  LogOut, 
-  Send, 
-  Paperclip, 
-  Mic, 
-  Smile, 
-  Globe, 
-  Info, 
-  ArrowLeft, 
-  Check, 
-  CheckCheck, 
-  Clock, 
-  Pin, 
-  CornerDownRight, 
-  Edit3, 
-  Trash2, 
-  X, 
-  FileText, 
-  Download, 
-  Play, 
-  Pause, 
-  AlertCircle, 
-  Loader2, 
-  Flag, 
-  Wifi, 
+import {
+  MessageSquare,
+  Search,
+  Plus,
+  Users,
+  Settings as SettingsIcon,
+  Shield,
+  LogOut,
+  Send,
+  Paperclip,
+  Mic,
+  Smile,
+  Globe,
+  Info,
+  ArrowLeft,
+  Check,
+  CheckCheck,
+  Clock,
+  Pin,
+  CornerDownRight,
+  Edit3,
+  Trash2,
+  X,
+  FileText,
+  Download,
+  Play,
+  Pause,
+  AlertCircle,
+  Loader2,
+  Flag,
+  Wifi,
   WifiOff,
   Sparkles,
   ChevronRight,
@@ -46,13 +46,13 @@ import {
   Share2,
   Copy
 } from 'lucide-react';
-import { 
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  onSnapshot, 
-  doc, 
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+  doc,
   updateDoc,
   limit,
   limitToLast
@@ -60,25 +60,25 @@ import {
 import { db, handleFirestoreError, OperationType } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { 
-  Conversation, 
-  Message, 
-  UserProfile, 
-  MessageType, 
+import {
+  Conversation,
+  Message,
+  UserProfile,
+  MessageType,
   ReplyReference,
   GLOBAL_CHAT_ID,
   getPresenceStatus,
   getPresenceDotClass
 } from '../../types';
-import { 
+import {
   getGlobalChatConversation,
-  sendMessage, 
-  editMessage, 
-  deleteMessage, 
-  reactToMessage, 
-  togglePinMessage, 
-  updateTypingStatus, 
-  markConversationRead, 
+  sendMessage,
+  editMessage,
+  deleteMessage,
+  reactToMessage,
+  togglePinMessage,
+  updateTypingStatus,
+  markConversationRead,
   uploadMediaFile,
   submitReport,
   getOrCreateDirectConversation,
@@ -145,7 +145,7 @@ export const ChatLayout: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [sendSuccess]);
   const [typingUsers, setTypingUsers] = useState<Record<string, string>>({}); // uid -> displayName
-  
+
   // Modals
   const [showContacts, setShowContacts] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -251,17 +251,17 @@ export const ChatLayout: React.FC = () => {
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioContext) return;
       const ctx = new AudioContext();
-      
+
       const osc1 = ctx.createOscillator();
       const gain1 = ctx.createGain();
       osc1.type = 'sine';
       osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
       gain1.gain.setValueAtTime(0.12, ctx.currentTime);
       gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-      
+
       osc1.connect(gain1);
       gain1.connect(ctx.destination);
-      
+
       osc1.start();
       osc1.stop(ctx.currentTime + 0.25);
 
@@ -531,7 +531,7 @@ export const ChatLayout: React.FC = () => {
       const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
       const lastMsg = messages[messages.length - 1];
       const isMyMessage = lastMsg && lastMsg.senderId === currentUser?.uid;
-      
+
       if (isNearBottom || isMyMessage) {
         messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
       }
@@ -867,8 +867,8 @@ export const ChatLayout: React.FC = () => {
   };
 
   return (
-    <div className="chat-layout h-[100dvh] min-h-[100dvh] w-full flex overflow-hidden bg-[#FDF4F5] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
-      
+    <div className="chat-layout h-[100dvh] min-h-[100dvh] w-full flex overflow-hidden text-slate-900 dark:text-slate-100 font-sans">
+
       {/* Network offline banner */}
       {!isOnline && (
         <div className="fixed top-16 left-0 right-0 z-40 bg-amber-500 text-slate-950 px-4 py-1 text-xs font-bold flex items-center justify-center gap-2 shadow-sm">
@@ -880,8 +880,8 @@ export const ChatLayout: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       {/* 1. LEFT SIDEBAR: Conversations List                           */}
       {/* ------------------------------------------------------------- */}
-      <aside className={`w-full md:w-80 lg:w-88 flex flex-col border-r border-slate-200/80 dark:border-slate-800/80 bg-[#F8F9FA] dark:bg-slate-900/90 backdrop-blur-md shrink-0 ${mobileView === 'chat' ? 'hidden md:flex' : 'flex'}`}>
-        
+      <aside className={`chat-sidebar w-full md:w-80 lg:w-88 flex flex-col shrink-0 ${mobileView === 'chat' ? 'hidden md:flex' : 'flex'}`}>
+
         {/* Sidebar Header */}
         <div className="p-3.5 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -981,13 +981,13 @@ export const ChatLayout: React.FC = () => {
 
         {/* Conversations Scroll Area */}
         <div className="flex-1 overflow-y-auto divide-y divide-slate-100/80 dark:divide-slate-800/40">
-          
+
           {/* ALWAYS PINNED AT THE TOP: GLOBAL CHAT */}
           <div
             onClick={() => { setActiveConversation(getGlobalChatConversation()); setMobileView('chat'); }}
             className={`mx-2 my-1.5 p-3.5 flex items-center gap-3.5 cursor-pointer transition-all rounded-2xl border ${
-              activeConversation.id === GLOBAL_CHAT_ID 
-                ? 'bg-indigo-600/15 border-indigo-500/30 shadow-sm ring-1 ring-indigo-500/20 text-white' 
+              activeConversation.id === GLOBAL_CHAT_ID
+                ? 'bg-indigo-600/15 border-indigo-500/30 shadow-sm ring-1 ring-indigo-500/20 text-white'
                 : 'bg-indigo-50/40 dark:bg-indigo-950/20 border-indigo-200/40 dark:border-indigo-900/40 hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40'
             }`}
           >
@@ -1057,8 +1057,8 @@ export const ChatLayout: React.FC = () => {
                   key={conv.id}
                   onClick={() => { setActiveConversation(conv); setMobileView('chat'); }}
                   className={`mx-2 my-1.5 p-3.5 flex items-center gap-3.5 cursor-pointer transition-all rounded-2xl group relative ${
-                    isSelected 
-                      ? 'bg-indigo-600/15 border border-indigo-500/30 shadow-sm ring-1 ring-indigo-500/20 text-white' 
+                    isSelected
+                      ? 'bg-indigo-600/15 border border-indigo-500/30 shadow-sm ring-1 ring-indigo-500/20 text-white'
                       : 'hover:bg-slate-100/80 dark:hover:bg-slate-800/60 border border-transparent'
                   }`}
                 >
@@ -1132,10 +1132,10 @@ export const ChatLayout: React.FC = () => {
       {/* 2. CENTER AREA: Active Conversation View                      */}
       {/* ------------------------------------------------------------- */}
       <main className={`flex-1 flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-slate-950 ${mobileView === 'sidebar' ? 'hidden md:flex' : 'flex'}`}>
-        
+
         {/* Chat Top Header */}
         <div className="h-14 px-4 sm:px-6 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between shrink-0 z-10">
-          
+
           <div className="flex items-center gap-3 min-w-0">
             {/* Back button on mobile */}
             <button
@@ -1145,8 +1145,8 @@ export const ChatLayout: React.FC = () => {
               <ArrowLeft className="w-5 h-5" />
             </button>
 
-            <div 
-              className="relative shrink-0 cursor-pointer" 
+            <div
+              className="relative shrink-0 cursor-pointer"
               onClick={() => setShowInfoPanel(!showInfoPanel)}
             >
               {activeConversation.id === GLOBAL_CHAT_ID ? (
@@ -1167,8 +1167,8 @@ export const ChatLayout: React.FC = () => {
               )}
             </div>
 
-            <div 
-              className="min-w-0 cursor-pointer" 
+            <div
+              className="min-w-0 cursor-pointer"
               onClick={() => setShowInfoPanel(!showInfoPanel)}
             >
               <div className="flex items-center gap-2">
@@ -1181,7 +1181,7 @@ export const ChatLayout: React.FC = () => {
                   </span>
                 )}
               </div>
-              
+
               <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2">
                 {Object.keys(typingUsers).length > 0 ? (
                   <div className="text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-1.5 animate-pulse">
@@ -1335,8 +1335,8 @@ export const ChatLayout: React.FC = () => {
                 {activeConversation.id === GLOBAL_CHAT_ID ? 'Welcome to Global Chat' : 'No messages yet'}
               </h4>
               <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto leading-relaxed">
-                {activeConversation.id === GLOBAL_CHAT_ID 
-                  ? 'This is the shared public space for all registered ChatPro members. Say hello to start!' 
+                {activeConversation.id === GLOBAL_CHAT_ID
+                  ? 'This is the shared public space for all registered ChatPro members. Say hello to start!'
                   : 'Start this private 1-on-1 thread. Messages reach your contact instantly.'}
               </p>
             </div>
@@ -1359,7 +1359,7 @@ export const ChatLayout: React.FC = () => {
                   )}
 
                   <div className={`flex items-end gap-2 max-w-[85%] sm:max-w-[75%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                    
+
                     {/* Avatar */}
                     {!isMe && (
                       <img
@@ -1370,7 +1370,7 @@ export const ChatLayout: React.FC = () => {
                     )}
 
                     {/* Bubble Container */}
-                    <div 
+                    <div
                       className="relative select-none"
                       onContextMenu={(e) => {
                         e.preventDefault();
@@ -1379,12 +1379,12 @@ export const ChatLayout: React.FC = () => {
                       onTouchStart={() => handleTouchStart(msg.id)}
                       onTouchEnd={handleTouchEnd}
                     >
-                      
+
                       {/* Reply Reference Header */}
                       {msg.replyTo && !isDeleted && (
                         <div className={`p-2 rounded-t-xl text-[10px] border-b mb-0.5 ${
-                          isMe 
-                            ? 'bg-indigo-700 text-indigo-100 border-indigo-600' 
+                          isMe
+                            ? 'bg-indigo-700 text-indigo-100 border-indigo-600'
                             : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600'
                         }`}>
                           <div className="flex items-center gap-1 font-semibold">
@@ -1397,11 +1397,11 @@ export const ChatLayout: React.FC = () => {
 
                       {/* Message Content Bubble */}
                       <div className={`p-3 rounded-2xl shadow-xs text-xs sm:text-sm leading-relaxed ${
-                        isMe 
-                          ? 'bg-indigo-600 text-white rounded-br-xs' 
+                        isMe
+                          ? 'bg-indigo-600 text-white rounded-br-xs'
                           : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700/80 rounded-bl-xs'
                       } ${isDeleted ? 'italic opacity-60' : ''}`}>
-                        
+
                         {isDeleted ? (
                           <span className="flex items-center gap-1.5 text-xs text-slate-400">
                             🚫 This message was deleted
@@ -1410,8 +1410,8 @@ export const ChatLayout: React.FC = () => {
                           <>
                             {/* Image Type */}
                             {msg.type === 'image' && msg.mediaUrl && (
-                              <div 
-                                className="mb-2 rounded-xl overflow-hidden cursor-pointer" 
+                              <div
+                                className="mb-2 rounded-xl overflow-hidden cursor-pointer"
                                 onClick={() => setMediaViewer({ url: msg.mediaUrl!, type: 'image', fileName: msg.fileName || 'image' })}
                               >
                                 <img
@@ -1478,7 +1478,7 @@ export const ChatLayout: React.FC = () => {
                         <div className={`flex items-center justify-end gap-1.5 mt-1 text-[9px] ${isMe ? 'text-indigo-200' : 'text-slate-400'}`}>
                           {msg.edited && !isDeleted && <span>(edited)</span>}
                           <span>{formatMessageTime(msg.createdAt || msg.timestamp)}</span>
-                          
+
                           {/* Read / Delivered Checkmarks */}
                           {isMe && !isDeleted && (
                             <span className="flex items-center gap-0.5">
@@ -1512,10 +1512,11 @@ export const ChatLayout: React.FC = () => {
                                 key={emoji}
                                 onClick={() => handleReact(msg, emoji)}
                                 className={`px-1.5 py-0.2 rounded-full text-xs flex items-center gap-1 border transition-colors ${
-                                  hasReacted 
-                                    ? 'bg-indigo-100 dark:bg-indigo-950/80 border-indigo-300 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-bold' 
+                                  hasReacted
+                                    ? 'bg-indigo-100 dark:bg-indigo-950/80 border-indigo-300 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-bold'
                                     : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
                                 }`}
+                                title={`Reacted by ${uids.length} people`}
                               >
                                 <span>{emoji}</span>
                                 <span className="text-[9px]">{uids.length}</span>
@@ -1528,7 +1529,7 @@ export const ChatLayout: React.FC = () => {
                       {/* Action Toolbar on Hover & Touch */}
                       {!isDeleted && (
                         <div className="absolute top-0 right-0 -translate-y-1/2 flex items-center gap-0.5 p-1 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md z-10 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                          
+
                           {/* Quick Emojis */}
                           <div className="flex items-center gap-0.5 px-1 border-r border-slate-200 dark:border-slate-700">
                             {['❤️', '👍', '🔥', '😂'].map((emoji) => (
@@ -1611,7 +1612,6 @@ export const ChatLayout: React.FC = () => {
                               <Trash2 className="w-3 h-3" />
                             </button>
                           )}
-
                         </div>
                       )}
 
@@ -1685,7 +1685,7 @@ export const ChatLayout: React.FC = () => {
 
         {/* Bottom Input Composer */}
         <div className="sticky bottom-0 left-0 right-0 z-20 p-3 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800/80 shrink-0 pb-safe pb-4">
-          
+
           {isDirectPartnerBlocked ? (
             <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-xs text-amber-800 dark:text-amber-300">
@@ -1711,7 +1711,7 @@ export const ChatLayout: React.FC = () => {
             />
           ) : (
             <form onSubmit={handleSendMessage} className="flex items-center gap-2 px-2.5 sm:px-4 py-2.5 sm:py-3 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800/80">
-              
+
               {/* File Attachment Input (hidden) */}
               <input
                 type="file"
@@ -1772,7 +1772,7 @@ export const ChatLayout: React.FC = () => {
                 >
                   <Paperclip className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
-                
+
                 <button
                   type="button"
                   onClick={() => setShowVoiceRecorder(true)}
@@ -1814,10 +1814,8 @@ export const ChatLayout: React.FC = () => {
                   <Send className="w-4 h-4" />
                 )}
               </button>
-
             </form>
           )}
-
         </div>
 
       </main>
@@ -1827,7 +1825,7 @@ export const ChatLayout: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       {showInfoPanel && (
         <aside className="w-72 lg:w-80 border-l border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 flex flex-col shrink-0 animate-in slide-in-from-right duration-200">
-          
+
           <div className="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500">Conversation Info</h4>
             <button onClick={() => setShowInfoPanel(false)} className="p-1 text-slate-400 hover:text-slate-600">
@@ -1836,7 +1834,7 @@ export const ChatLayout: React.FC = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-5">
-            
+
             {/* Avatar & Header */}
             <div className="text-center">
               {activeConversation.id === GLOBAL_CHAT_ID ? (
@@ -2003,49 +2001,66 @@ export const ChatLayout: React.FC = () => {
       />
 
       {/* Media Fullscreen Viewer */}
-      <MediaViewerModal
-        mediaUrl={mediaViewer?.url || null}
-        type={mediaViewer?.type}
-        fileName={mediaViewer?.fileName}
-        onClose={() => setMediaViewer(null)}
-      />
+      {mediaViewer && (
+        <MediaViewerModal
+          mediaUrl={mediaViewer.url}
+          type={mediaViewer.type}
+          fileName={mediaViewer.fileName}
+          onClose={() => setMediaViewer(null)}
+        />
+      )}
 
-      {/* Report User Modal */}
-      {reportingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xl">
-            <h4 className="font-bold text-base text-slate-900 dark:text-white mb-1">
-              Report {reportingUser.name}
-            </h4>
-            <p className="text-xs text-slate-500 mb-4">
-              Submit a moderation ticket to the ChatPro administration team.
+      {/* Delete Conversation Confirmation Modal */}
+      {conversationToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in font-sans">
+          <div className="w-full max-w-sm rounded-3xl bg-slate-900 border border-slate-800 p-6 text-white shadow-2xl">
+            <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center mb-4">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-bold text-white mb-1">Delete Conversation?</h3>
+            <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+              Are you sure you want to delete this conversation with <span className="font-semibold text-slate-200">{getConversationInfo(conversationToDelete).title}</span>? This action cannot be undone.
             </p>
-            <form onSubmit={handleReportUser} className="space-y-3">
-              <textarea
-                rows={3}
-                required
-                value={reportReason}
-                onChange={(e) => setReportReason(e.target.value)}
-                placeholder="Reason for report (e.g. harassment, spam, inappropriate content)..."
-                className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setReportingUser(null)}
-                  className="px-3 py-1.5 text-xs text-slate-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingReport}
-                  className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold"
-                >
-                  {submittingReport ? 'Submitting...' : 'Submit Report'}
-                </button>
+            {deleteFeedback && (
+              <div className="mb-4 p-2.5 rounded-xl bg-red-500/20 text-red-300 text-xs font-medium">
+                {deleteFeedback}
               </div>
-            </form>
+            )}
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => { setConversationToDelete(null); setDeleteFeedback(null); }}
+                disabled={isDeletingConv}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingConv}
+                onClick={async () => {
+                  try {
+                    setIsDeletingConv(true);
+                    setDeleteFeedback(null);
+                    await deleteConversation(conversationToDelete.id, currentUser!.uid);
+
+                    setConversations(prev => prev.filter(c => c.id !== conversationToDelete.id));
+                    if (activeConversation.id === conversationToDelete.id) {
+                      setActiveConversation(getGlobalChatConversation());
+                    }
+                    setConversationToDelete(null);
+                  } catch (err: any) {
+                    setDeleteFeedback(err.message || 'Failed to delete conversation.');
+                  } finally {
+                    setIsDeletingConv(false);
+                  }
+                }}
+                className="px-5 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-500 text-white transition-all cursor-pointer flex items-center gap-2 shadow-lg shadow-red-600/30"
+              >
+                {isDeletingConv && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>Delete</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -2054,7 +2069,7 @@ export const ChatLayout: React.FC = () => {
       {activeCall && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl animate-in fade-in">
           <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-8 flex flex-col items-center text-white shadow-2xl relative overflow-hidden">
-            
+
             {/* Background ambient glow */}
             <div className="absolute inset-0 bg-indigo-600/5 pointer-events-none" />
 
@@ -2168,7 +2183,7 @@ export const ChatLayout: React.FC = () => {
                     setIsDeletingConv(true);
                     setDeleteFeedback(null);
                     await deleteConversation(conversationToDelete.id, currentUser!.uid);
-                    
+
                     setConversations(prev => prev.filter(c => c.id !== conversationToDelete.id));
                     if (activeConversation.id === conversationToDelete.id) {
                       setActiveConversation(getGlobalChatConversation());
@@ -2193,3 +2208,5 @@ export const ChatLayout: React.FC = () => {
     </div>
   );
 };
+
+export default ChatLayout;
