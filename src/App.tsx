@@ -41,7 +41,15 @@ export default function App() {
   return (
     <>
       <LandingPage onGetStarted={() => setAuthOpen(true)} onLogin={() => setAuthOpen(true)} onNavigate={navigate} />
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onAuthenticated={() => {}} />
+      <AuthModal
+        isOpen={authOpen}
+        onClose={() => setAuthOpen(false)}
+        initialMode="login"
+        onAuthenticated={() => {
+          setAuthOpen(false);
+          navigate('/chat');
+        }}
+      />
     </>
   );
 }
