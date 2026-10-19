@@ -10,8 +10,22 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   global: {
-    headers: {
-      // Tokens are managed via syncFirebaseAuthWithSupabase
+    fetch: async (url, options = {}) => {
+      // Automatically inject the latest Firebase ID token into every request header
+      const user = auth.currentUser;
+      if (user) {
+        try {
+          // getIdToken(false) returns the cached token, or refreshes if expired
+          const token = await user.getIdToken(false);
+          options.headers = {
+            ...options.headers,
+            Authorization: `Bearer ${token}`,
+          };
+        } catch (error) {
+          console.error('Error fetching Firebase token for Supabase request:', error);
+        }
+      }
+      return fetch(url, options);
     },
   },
   auth: {
@@ -22,8 +36,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 /**
- * Dynamically updates the Supabase client with the current Firebase ID token.
- * This should be called whenever the Firebase auth state changes.
+ * Ensures the Supabase client is aware of the Firebase authentication state.
+ * With the custom fetch wrapper, this now primarily handles session cleanup.
  */
 export async function syncFirebaseAuthWithSupabase() {
   const user = auth.currentUser;
@@ -33,19 +47,10 @@ export async function syncFirebaseAuthWithSupabase() {
   }
 
   try {
-    const token = await user.getIdToken(true);
-
-    // Use the official integration approach:
-    // Manually set the Authorization header for the Supabase client
-    // so that every subsequent request carries the Firebase JWT.
-    supabase.setSession({
-      access_token: token,
-      refresh_token: '', // Firebase manages its own refresh
-    });
-
-    return token;
+    // Ensure the token is valid/refreshed upon initial sync
+    return await user.getIdToken(true);
   } catch (error) {
-    console.error('Failed to fetch Firebase ID token for Supabase:', error);
+    console.error('Failed to refresh Firebase ID token for Supabase:', error);
     return null;
   }
 }
