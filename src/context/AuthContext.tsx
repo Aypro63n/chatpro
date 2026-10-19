@@ -14,6 +14,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { supabase, syncFirebaseAuthWithSupabase } from '../lib/supabase';
 import { UserProfile } from '../types';
 
 interface AuthContextType {
@@ -49,6 +50,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let unsubscribeProfile: (() => void) | undefined;
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      // Sync Firebase token with Supabase client on every auth state change
+      await syncFirebaseAuthWithSupabase();
+
       unsubscribeProfile?.(); unsubscribeProfile = undefined;
       setCurrentUser(user); setUserProfile(null);
       if (!user) { setLoading(false); return; }
@@ -109,7 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithGoogle = async () => { const provider = new GoogleAuthProvider(); try { await signInWithPopup(auth, provider); } catch (err: any) { if (['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request'].includes(err.code)) { await signInWithRedirect(auth, provider); } else throw new Error(err.message || 'Google sign in failed.'); } };
   const loginAnonymously = async () => { try { await signInAnonymously(auth); } catch (err: any) { if (err.code === 'auth/operation-not-allowed') throw new Error('Anonymous authentication is disabled. Enable it in Firebase or use Google / Email sign-in.'); throw new Error(err.message || 'Guest sign-in failed.'); } };
   const logout = async () => { if (currentUser) await setPresence(currentUser.uid, 'offline'); await signOut(auth); setUserProfile(null); setCurrentUser(null); };
-  const resetPassword = async (email: string) => { try { await sendPasswordResetEmail(auth, email.trim()); } catch (err: any) { if (err.code === 'auth/user-not-found') throw new Error('No account found with this email.'); throw new Error(err.message || 'Failed to send password reset email.'); } };
+  const resetPassword = async (email: string) => { try { await sendPasswordResetEmail(auth, email.trim()); } catch (err: any) { if (err.code === 'auth/user-not-found') throw new Error('No account found with this email.'); throw new Error('Failed to send password reset email.'); } };
   const updateProfileData = async (data: Partial<UserProfile>) => { if (!currentUser) throw new Error('Not authenticated'); try { await updateDoc(doc(db, 'users', currentUser.uid), { ...data, updatedAt: new Date().toISOString() }); setUserProfile((prev) => prev ? { ...prev, ...data } : null); } catch (error) { handleFirestoreError(error, OperationType.UPDATE, `users/${currentUser.uid}`); } };
   const refreshProfile = async () => { if (!currentUser) return; const snap = await getDoc(doc(db, 'users', currentUser.uid)); if (snap.exists()) setUserProfile(snap.data() as UserProfile); };
 
