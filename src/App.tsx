@@ -5,7 +5,6 @@ import { AuthModal } from "./components/AuthModal";
 import { LandingPage } from "./components/LandingPage";
 import { LegalPage } from "./components/LegalPage";
 import { NotFound } from "./components/NotFound";
-import type { User } from "./types";
 
 export default function App() {
   const { currentUser, loading } = useAuth();
@@ -36,7 +35,7 @@ export default function App() {
   if (route === "/terms") return <LegalPage kind="terms" onHome={() => navigate("/")} />;
   if (route !== "/" && route !== "/chat") return <NotFound />;
 
-  if (currentUser) return <ChatLayout user={currentUser} onSignOut={() => {}} />;
+  if (currentUser) return <ChatLayout />;
 
   return (
     <>
