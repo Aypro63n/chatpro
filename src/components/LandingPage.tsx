@@ -91,19 +91,44 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
             <p className="landing-proof">Private by default · Firebase-backed · Built for teams</p>
           </div>
 
-          <img
-            className="landing-hero-image"
-            src="/hero.png"
-            alt="Illustration of people collaborating through ChatPro conversations"
-            width={1200}
-            height={900}
-            loading="eager"
-          />
+          <div className="landing-hero-visual">
+            <img
+              className="landing-hero-image"
+              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80"
+              alt="Team collaborating around a workspace"
+              width={1200}
+              height={900}
+              loading="eager"
+            />
+            <div className="landing-hero-badge">
+              <span>Live Team Room</span>
+              <strong>24 online</strong>
+            </div>
+          </div>
         </section>
 
         <section className="landing-section" id="features">
           <p className="landing-kicker">CORE CAPABILITIES</p>
           <h2>Clarity without the ceremony.</h2>
+
+          <div className="landing-media-grid" aria-label="ChatPro workspace images">
+            <img
+              src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80"
+              alt="People in a collaborative strategy meeting"
+              className="landing-photo landing-photo-lg"
+            />
+            <img
+              src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80"
+              alt="Laptop and team discussion"
+              className="landing-photo"
+            />
+            <img
+              src="https://images.unsplash.com/photo-1522204523234-8729aa6e3d5f?auto=format&fit=crop&w=900&q=80"
+              alt="Creative team reviewing product ideas"
+              className="landing-photo"
+            />
+          </div>
+
           <ol className="landing-feature-list">
             <li>
               <h3>Direct and group chat</h3>
