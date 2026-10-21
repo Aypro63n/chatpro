@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import { GradientASCII } from './GradientASCII';
 
-interface LandingPageProps {
-  onGetStarted: () => void;
-  onLogin: () => void;
-  onNavigate?: (path: string) => void;
-}
+interface LandingPageProps { onGetStarted: () => void; onLogin: () => void; onNavigate: (path: string) => void; }
 
 const PHONE = '+919876543210';
 
@@ -45,8 +42,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
         <nav className="landing-links" aria-label="Landing page navigation">
           <a href="#features" onClick={(e) => { e.preventDefault(); scrollTo('features'); }}>Features</a>
           <a href="#security" onClick={(e) => { e.preventDefault(); scrollTo('security'); }}>Security</a>
-          <a href="/privacy" onClick={(e) => { e.preventDefault(); handleNavigate('/privacy'); }}>Privacy</a>
-          <a href="/terms" onClick={(e) => { e.preventDefault(); handleNavigate('/terms'); }}>Terms</a>
+          <a href="/privacy" onClick={(e) => { e.preventDefault(); onNavigate('/privacy'); }}>Privacy</a>
         </nav>
 
         <div className="landing-nav-actions">
@@ -67,8 +63,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
           <nav className="mobile-nav" aria-label="Mobile navigation">
             <a href="#features" onClick={(e) => { e.preventDefault(); scrollTo('features'); }}>Features</a>
             <a href="#security" onClick={(e) => { e.preventDefault(); scrollTo('security'); }}>Security</a>
-            <a href="/privacy" onClick={(e) => { e.preventDefault(); handleNavigate('/privacy'); }}>Privacy</a>
-            <a href="/terms" onClick={(e) => { e.preventDefault(); handleNavigate('/terms'); }}>Terms</a>
+            <a href="/privacy" onClick={(e) => { e.preventDefault(); onNavigate('/privacy'); }}>Privacy</a>
+            <a href="/terms" onClick={(e) => { e.preventDefault(); onNavigate('/terms'); }}>Terms</a>
             <a href={`tel:${PHONE}`}>Call ChatPro</a>
             <a href="mailto:hello@chatpro.app">Email ChatPro</a>
             <button type="button" className="btn btn-secondary" onClick={() => { closeMenu(); onLogin(); }}>Sign in</button>
@@ -77,7 +73,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin,
       </header>
 
       <main>
-        <section className="landing-hero" id="product">
+        {/* Hero with GradientASCII Background */}
+        <section className="landing-hero landing-hero-with-bg" id="product">
+          <div className="landing-hero-bg">
+            <GradientASCII
+              colors={['#020C1B', '#163B70', '#2563EB', '#67E8F9']}
+              shape="horizon"
+              characters=" .:-=+*#%@"
+              cellSize={16}
+              density={0.65}
+              glyphOpacity={0.7}
+              gradientOpacity={0.55}
+              glow={0.16}
+              flicker={0.08}
+              softness={0.65}
+              flow={0.25}
+              speed={0.3}
+              grain={0.025}
+              mouseInteraction={true}
+              clickEffect="wave"
+              intro={true}
+            />
+          </div>
           <div className="landing-hero-copy">
             <p className="landing-kicker">CHATPRO / REAL-TIME COLLABORATION</p>
             <h1>Work through conversations, not around them.</h1>
