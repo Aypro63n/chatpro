@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   --pink: #FDA2AC;          /* soft strawberry pink */
   --pink-soft: #FDEEF0;     /* pink wash for backgrounds */

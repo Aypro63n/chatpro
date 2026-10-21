@@ -13,11 +13,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   global: {
     fetch: async (url, options = {}) => {
-      // Automatically inject the latest Firebase ID token into every request header
       const user = auth.currentUser;
       if (user) {
         try {
-          // getIdToken(false) returns the cached token, or refreshes if expired
           const token = await user.getIdToken(false);
           options.headers = {
             ...options.headers,
@@ -37,10 +35,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-/**
- * Ensures the Supabase client is aware of the Firebase authentication state.
- * With the custom fetch wrapper, this now primarily handles session cleanup.
- */
 export async function syncFirebaseAuthWithSupabase() {
   const user = auth.currentUser;
   if (!user) {
@@ -53,7 +47,6 @@ export async function syncFirebaseAuthWithSupabase() {
   }
 
   try {
-    // Ensure the token is valid/refreshed upon initial sync
     return await user.getIdToken(true);
   } catch (error) {
     console.error('Failed to refresh Firebase ID token for Supabase:', error);
