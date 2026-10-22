@@ -949,32 +949,32 @@ export const ChatLayout: React.FC = () => {
               value={sidebarSearch}
               onChange={(e) => setSidebarSearch(e.target.value)}
               placeholder="Search conversations..."
-              className="w-full pl-8.5 pr-3 py-1.5 bg-slate-100/80 dark:bg-slate-800/60 border border-transparent focus:border-indigo-500/50 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none transition-all"
+              className="w-full pl-8.5 pr-3 py-1.5 bg-[var(--surface-alt)] border border-transparent focus:border-indigo-500/50 rounded-xl text-xs text-[var(--ink)] placeholder-[var(--ink-muted)] focus:outline-none transition-all"
             />
           </div>
 
           <div className="flex items-center gap-1 text-[10px] font-semibold text-slate-500">
             <button
               onClick={() => setConversationFilter('all')}
-              className={`px-2 py-0.5 rounded-lg transition-colors ${conversationFilter === 'all' ? 'bg-indigo-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              className={`px-2 py-0.5 rounded-lg transition-colors ${conversationFilter === 'all' ? 'bg-[var(--cta)] text-white' : 'hover:bg-[var(--surface-alt)]'}`}
             >
               All
             </button>
             <button
               onClick={() => setConversationFilter('direct')}
-              className={`px-2 py-0.5 rounded-lg transition-colors ${conversationFilter === 'direct' ? 'bg-indigo-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              className={`px-2 py-0.5 rounded-lg transition-colors ${conversationFilter === 'direct' ? 'bg-[var(--cta)] text-white' : 'hover:bg-[var(--surface-alt)]'}`}
             >
               DMs
             </button>
             <button
               onClick={() => setConversationFilter('group')}
-              className={`px-2 py-0.5 rounded-lg transition-colors ${conversationFilter === 'group' ? 'bg-indigo-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              className={`px-2 py-0.5 rounded-lg transition-colors ${conversationFilter === 'group' ? 'bg-[var(--cta)] text-white' : 'hover:bg-[var(--surface-alt)]'}`}
             >
               Groups
             </button>
             <button
               onClick={() => setConversationFilter('unread')}
-              className={`px-2 py-0.5 rounded-lg transition-colors ${conversationFilter === 'unread' ? 'bg-indigo-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              className={`px-2 py-0.5 rounded-lg transition-colors ${conversationFilter === 'unread' ? 'bg-[var(--cta)] text-white' : 'hover:bg-[var(--surface-alt)]'}`}
             >
               Unread
             </button>
@@ -1000,7 +1000,7 @@ export const ChatLayout: React.FC = () => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-0.5">
                 <div className="flex items-center gap-1.5">
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                  <h4 className="text-xs font-bold text-[var(--ink)]">
                     Global Chat
                   </h4>
                   <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300 uppercase tracking-wider">
@@ -1084,7 +1084,7 @@ export const ChatLayout: React.FC = () => {
                       </h4>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {conv.lastMessage && (
-                          <span className="text-[10px] text-slate-400 font-mono">
+                          <span className="text-[10px] text-[var(--ink-muted)] font-mono">
                             {formatMessageTime(conv.lastMessage.createdAt || conv.lastMessage.timestamp)}
                           </span>
                         )}
