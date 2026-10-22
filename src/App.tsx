@@ -44,7 +44,7 @@ export default function App() {
         isOpen={authOpen}
         onClose={() => setAuthOpen(false)}
         initialMode="login"
-        onAuthenticated={() => {
+        onSuccess={() => {
           setAuthOpen(false);
           navigate('/chat');
         }}
