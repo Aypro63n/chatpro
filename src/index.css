@@ -80,10 +80,10 @@ html.dark {
    The chat UI uses Tailwind text-slate-400/500/600/700 classes which are
    too light to read on the dark chat background. These rules boost their
    contrast inside the chat shell only. */
-.chat-layout .text-slate-400 { color: #c9d1d9 !important; }
-.chat-layout .text-slate-500 { color: #b8c0ca !important; }
-.chat-layout .text-slate-600 { color: #aeb8c2 !important; }
-.chat-layout .text-slate-700 { color: #9aa6b0 !important; }
+.chat-layout .text-slate-400 { color: #e6edf3 !important; }
+.chat-layout .text-slate-500 { color: #d1d9e0 !important; }
+.chat-layout .text-slate-600 { color: #b8c0ca !important; }
+.chat-layout .text-slate-700 { color: #a4adb5 !important; }
 .chat-layout .text-slate-800 { color: #8a95a0 !important; }
 .chat-layout .text-slate-900 { color: #f0f6fc !important; }
 .chat-layout .text-slate-100 { color: #ffffff !important; }
@@ -95,6 +95,24 @@ html:not(.dark) .chat-layout .text-slate-700 { color: #1f2937 !important; }
 html:not(.dark) .chat-layout .text-slate-800 { color: #111827 !important; }
 html:not(.dark) .chat-layout .text-slate-900 { color: #0f172a !important; }
 html:not(.dark) .chat-layout .text-slate-100 { color: #0f172a !important; }
+
+/* ── Fix text-[var(--ink)] resolving to light-mode value in dark mode ──── */
+html.dark .chat-layout [class*="text-[var(--ink)]"],
+html.dark .chat-layout [class*="text-[var(--text)]"] {
+  color: #f0f6fc !important;
+}
+
+/* ── Fix purple badges on purple backgrounds ───────────────────────────── */
+.chat-layout [class*="bg-indigo-100"],
+.chat-layout [class*="bg-indigo-900"],
+.chat-layout [class*="bg-indigo-950"] {
+  background: var(--chat-accent-soft) !important;
+}
+.chat-layout [class*="text-indigo-700"],
+.chat-layout [class*="text-indigo-300"],
+.chat-layout [class*="text-indigo-600"] {
+  color: var(--chat-accent) !important;
+}
 
 /* ── Chat shell background ────────────────────────────────────────────────
    Drives the chat area background color in both light and dark modes. */
@@ -498,10 +516,10 @@ img, video { max-width: 100%; }
    The chat UI uses Tailwind text-slate-400/500/600/700 classes which are
    too light to read on the dark chat background. These rules boost their
    contrast inside the chat shell only. */
-.chat-layout .text-slate-400 { color: #c9d1d9 !important; }
-.chat-layout .text-slate-500 { color: #b8c0ca !important; }
-.chat-layout .text-slate-600 { color: #aeb8c2 !important; }
-.chat-layout .text-slate-700 { color: #9aa6b0 !important; }
+.chat-layout .text-slate-400 { color: #e6edf3 !important; }
+.chat-layout .text-slate-500 { color: #d1d9e0 !important; }
+.chat-layout .text-slate-600 { color: #b8c0ca !important; }
+.chat-layout .text-slate-700 { color: #a4adb5 !important; }
 .chat-layout .text-slate-800 { color: #8a95a0 !important; }
 .chat-layout .text-slate-900 { color: #f0f6fc !important; }
 .chat-layout .text-slate-100 { color: #ffffff !important; }
@@ -513,3 +531,21 @@ html:not(.dark) .chat-layout .text-slate-700 { color: #1f2937 !important; }
 html:not(.dark) .chat-layout .text-slate-800 { color: #111827 !important; }
 html:not(.dark) .chat-layout .text-slate-900 { color: #0f172a !important; }
 html:not(.dark) .chat-layout .text-slate-100 { color: #0f172a !important; }
+
+/* ── Fix text-[var(--ink)] resolving to light-mode value in dark mode ──── */
+html.dark .chat-layout [class*="text-[var(--ink)]"],
+html.dark .chat-layout [class*="text-[var(--text)]"] {
+  color: #f0f6fc !important;
+}
+
+/* ── Fix purple badges on purple backgrounds ───────────────────────────── */
+.chat-layout [class*="bg-indigo-100"],
+.chat-layout [class*="bg-indigo-900"],
+.chat-layout [class*="bg-indigo-950"] {
+  background: var(--chat-accent-soft) !important;
+}
+.chat-layout [class*="text-indigo-700"],
+.chat-layout [class*="text-indigo-300"],
+.chat-layout [class*="text-indigo-600"] {
+  color: var(--chat-accent) !important;
+}
