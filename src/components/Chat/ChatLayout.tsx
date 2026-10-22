@@ -787,15 +787,17 @@ export const ChatLayout: React.FC = () => {
     ? messages.filter((m) => (m.text || m.content).toLowerCase().includes(searchQueryInChat.toLowerCase()))
     : messages;
 
+  // Wallpaper background classes — the full theming (surfaces, accents,
+  // light/dark variants) is driven by premium-chat.css via [data-wallpaper].
   const wallpaperClasses: Record<string, string> = {
-    default: 'bg-slate-50/60 dark:bg-slate-950/60',
-    midnight: 'bg-slate-900 dark:bg-[#070d19]',
-    emerald: 'bg-emerald-950/20 dark:bg-[#04140d]',
-    cyber: 'bg-purple-950/20 dark:bg-[#11071d]',
-    warm: 'bg-amber-950/20 dark:bg-[#180e04]',
-    obsidian: 'bg-neutral-950',
-    carbon: 'bg-zinc-950',
-    aurora: 'bg-indigo-950/20',
+    default: 'bg-transparent dark:bg-transparent',
+    midnight: 'bg-transparent dark:bg-transparent',
+    emerald: 'bg-transparent dark:bg-transparent',
+    cyber: 'bg-transparent dark:bg-transparent',
+    warm: 'bg-transparent dark:bg-transparent',
+    obsidian: 'bg-transparent dark:bg-transparent',
+    carbon: 'bg-transparent dark:bg-transparent',
+    aurora: 'bg-transparent dark:bg-transparent',
   };
 
   const getConversationInfo = (conv: Conversation) => {

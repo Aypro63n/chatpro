@@ -1,16 +1,46 @@
 @import "tailwindcss";
 
 :root {
-  --pink: #FDA2AC;          /* soft strawberry pink */
-  --pink-soft: #FDEEF0;     /* pink wash for backgrounds */
-  --crimson: #CB0E31;       /* vibrant crimson red */
+  /* Brand palette (used by landing + auth screens) */
+  --pink: #FDA2AC;
+  --pink-soft: #FDEEF0;
+  --crimson: #CB0E31;
   --crimson-dark: #A80B28;
-  --lime: #BAD62C;          /* lime green */
+  --lime: #BAD62C;
   --lime-dark: #9DBA1E;
-  --ink: #241519;           /* warm near-black text */
-  --muted: #6B4F55;         /* darker rose-grey for contrast */
-  --line: #E5B8BF;          /* darker hairlines */
+  --ink: #241519;
+  --muted: #6B4F55;
+  --line: #E5B8BF;
   --paper: #FFFFFF;
+
+  /* Graphite / neutral design tokens (used by app shell + auth forms) */
+  --bg: #f4f4f5;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-strong: #f3f3f4;
+  --surface-soft: #f7f7f8;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --text: #18181b;
+  --text-soft: #52525b;
+  --text-muted: #71717a;
+  --focus: rgba(24, 24, 27, 0.17);
+  --danger: #b91c1c;
+  --success: #166534;
+  --warning: #a16207;
+  --white: #ffffff;
+
+  /* Chat shell tokens (overridden by premium-chat.css for the workspace skin) */
+  --chat-shell-bg: #f7f7f8;
+  --chat-surface: #ffffff;
+  --chat-surface-alt: #f3f4f6;
+  --chat-line: #e5e7eb;
+  --chat-text: #18181b;
+  --chat-text-soft: #5f6470;
+  --chat-muted: #7b7f88;
+  --chat-accent: #18181b;
+  --chat-accent-soft: rgba(24, 24, 27, 0.08);
+
   color-scheme: light;
   font-family: "Inter", "SF Pro Display", "Segoe UI", sans-serif;
 }

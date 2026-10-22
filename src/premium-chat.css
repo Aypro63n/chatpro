@@ -1,87 +1,372 @@
-/* Targeted workspace skin: scopes to the authenticated ChatLayout shell without changing chat logic. */
+/* ChatPro workspace skin — overrides the light-only .chat-layout rules from index.css
+   and adds dark/light theme support with per-wallpaper color variants. */
+
+/* ── Dark theme (default, matched by ThemeContext) ─────────────────────── */
 #root > div > div > div[class*="h-\\[100dvh\\]"] {
-  --chat-ink: #f5f1ff;
-  --chat-muted: #c9c1de;
-  --chat-line: rgba(203, 179, 232, 0.22);
-  --chat-panel: rgba(20, 27, 34, 0.94);
-  --chat-surface: #0d1117;
-  --chat-elevated: #141b22;
-  --chat-highlight: #CBB3E8;
-  --chat-accent: #D4FF3F;
-  --chat-cta: #E34234;
+  --surface: #0d1117;
+  --surface-elevated: #141b22;
+  --surface-alt: #1a222b;
+  --line: rgba(148, 163, 184, 0.12);
+  --line-strong: rgba(148, 163, 184, 0.22);
+  --ink: #f0f6fc;
+  --ink-soft: #c9d1d9;
+  --ink-muted: #8b949e;
+  --accent: #58a6ff;
+  --accent-soft: rgba(88, 166, 255, 0.12);
+  --cta: #388bfd;
+  --danger: #f85149;
+  --success: #3fb950;
+  --warning: #d29922;
+  --shadow: rgba(0, 0, 0, 0.4);
+
   background: linear-gradient(180deg, #0d1117 0%, #0b0f14 100%) !important;
-  color: var(--chat-ink) !important;
+  color: var(--ink) !important;
   font-family: Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
 }
 
+/* ── Light theme ────────────────────────────────────────────────────────── */
+html:not(.dark) #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #f8fafc;
+  --surface-elevated: #ffffff;
+  --surface-alt: #f1f5f9;
+  --line: #e2e8f0;
+  --line-strong: #cbd5e1;
+  --ink: #0f172a;
+  --ink-soft: #475569;
+  --ink-muted: #64748b;
+  --accent: #6366f1;
+  --accent-soft: rgba(99, 102, 241, 0.08);
+  --cta: #4f46e5;
+  --danger: #ef4444;
+  --success: #16a34a;
+  --warning: #ca8a04;
+  --shadow: rgba(0, 0, 0, 0.08);
+
+  background: #f1f5f9 !important;
+  color: var(--ink) !important;
+}
+
+/* ── Nuke competing palette colors ──────────────────────────────────────── */
 #root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-gradient"],
 #root > div > div > div[class*="h-\\[100dvh\\]"] [class*="from-indigo"],
 #root > div > div > div[class*="h-\\[100dvh\\]"] [class*="from-cyan"],
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="from-purple"] { background-image: none !important; }
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="from-purple"] {
+  background-image: none !important;
+}
 
+/* ── Corner radius overrides ───────────────────────────────────────────── */
 #root > div > div > div[class*="h-\\[100dvh\\]"] [class*="rounded-2xl"],
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="rounded-3xl"] { border-radius: 14px !important; }
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="rounded-full"] { border-radius: 8px !important; }
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="rounded-3xl"] {
+  border-radius: 12px !important;
+}
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="rounded-full"] {
+  border-radius: 50% !important;
+}
 
+/* ── Accent recoloring (indigo → our brand accent) ──────────────────────── */
 #root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-indigo-600"],
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-cyan-500"],
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-purple"],
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-violet"] { background: var(--chat-cta) !important; color: #fff !important; }
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-cyan-500"] {
+  background: var(--cta) !important;
+  color: #fff !important;
+}
 
 #root > div > div > div[class*="h-\\[100dvh\\]"] [class*="text-indigo"],
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="text-purple"],
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="text-violet"] { color: var(--chat-highlight) !important; }
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="text-cyan"] {
+  color: var(--accent) !important;
+}
 
 #root > div > div > div[class*="h-\\[100dvh\\]"] [class*="border-indigo"],
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="border-purple"],
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="ring-indigo"] {
-  border-color: rgba(203, 179, 232, 0.46) !important;
-  --tw-ring-color: rgba(203, 179, 232, 0.46) !important;
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="border-cyan"] {
+  border-color: var(--line-strong) !important;
 }
 
 #root > div > div > div[class*="h-\\[100dvh\\]"] [class*="shadow-indigo"],
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="shadow-purple"] { box-shadow: 0 12px 32px rgba(17, 24, 39, 0.24) !important; }
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="shadow-cyan"] {
+  box-shadow: 0 8px 24px var(--shadow) !important;
+}
 
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-slate-900"] { background: var(--chat-elevated) !important; }
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-slate-800"] { background: #1a222b !important; }
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-slate-700"] { background: #232f3a !important; }
+/* ── Surface recoloring ─────────────────────────────────────────────────── */
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-slate-900"] {
+  background: var(--surface-elevated) !important;
+}
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-slate-800"] {
+  background: var(--surface-alt) !important;
+}
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-slate-700"] {
+  background: #2d3748 !important;
+}
 #root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-slate-100"],
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-slate-50"] { background: rgba(203, 179, 232, 0.08) !important; }
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-white"] { background: rgba(255,255,255,0.02) !important; }
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="border-slate"] { border-color: var(--chat-line) !important; }
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="text-slate-900"] { color: var(--chat-ink) !important; }
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-slate-50"] {
+  background: var(--accent-soft) !important;
+}
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-white"] {
+  background: var(--surface-elevated) !important;
+}
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="border-slate"] {
+  border-color: var(--line) !important;
+}
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="text-slate-900"] {
+  color: var(--ink) !important;
+}
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="text-slate-800"] {
+  color: var(--ink-soft) !important;
+}
 #root > div > div > div[class*="h-\\[100dvh\\]"] [class*="text-slate-500"],
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="text-slate-400"] { color: var(--chat-muted) !important; }
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="text-slate-400"] {
+  color: var(--ink-muted) !important;
+}
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="text-slate-300"] {
+  color: var(--ink-soft) !important;
+}
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-slate-200"] {
+  background: var(--line-strong) !important;
+}
+
+/* ── Form elements ─────────────────────────────────────────────────────── */
 #root > div > div > div[class*="h-\\[100dvh\\]"] input,
 #root > div > div > div[class*="h-\\[100dvh\\]"] textarea,
 #root > div > div > div[class*="h-\\[100dvh\\]"] select {
-  background: rgba(255,255,255,0.02) !important;
-  color: var(--chat-ink) !important;
-  border-color: var(--chat-line) !important;
-}
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="text-slate-300"] { color: #e5def5 !important; }
-#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-slate-200"] { background: rgba(203, 179, 232, 0.12) !important; }
-
-[data-wallpaper="clean"] #root > div > div > div[class*="h-\\[100dvh\\]"] { --chat-surface: #0f141a; --chat-panel: rgba(17, 22, 31, 0.9); --chat-ink: #f5f1ff; }
-[data-wallpaper="midnight"] #root > div > div > div[class*="h-\\[100dvh\\]"] { --chat-surface: #0b0f13; --chat-panel: rgba(15,20,26,0.96); --chat-ink: #f3f4f6; }
-[data-wallpaper="emerald"] #root > div > div > div[class*="h-\\[100dvh\\]"] { --chat-surface: #101b17; --chat-panel: rgba(18,28,25,0.96); --chat-ink: #ecfdf5; }
-[data-wallpaper="cyber"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
-  background-color: #0f1115 !important;
-  background-image: linear-gradient(rgba(203, 179, 232, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(203, 179, 232, 0.08) 1px, transparent 1px) !important;
-  background-size: 28px 28px !important;
-}
-[data-wallpaper="warm"] #root > div > div > div[class*="h-\\[100dvh\\]"] { --chat-surface: #171512; --chat-panel: rgba(33,27,23,0.96); --chat-ink: #f8f4ef; }
-[data-wallpaper="mocha"] #root > div > div > div[class*="h-\\[100dvh\\]"] { --chat-surface: #1a1412; --chat-panel: rgba(42,37,33,0.96); --chat-ink: #f5f5f4; }
-[data-wallpaper="obsidian"] #root > div > div > div[class*="h-\\[100dvh\\]"] { --chat-surface: #09090b; --chat-panel: rgba(16,16,18,0.96); --chat-ink: #e4e4e7; }
-[data-wallpaper="carbon"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
-  --chat-surface: #161618; --chat-panel: rgba(32,32,35,0.96); --chat-ink: #f1f5f9;
-  background-image: repeating-linear-gradient(135deg, rgba(255,255,255,.025), rgba(255,255,255,.025) 1px, transparent 1px, transparent 7px) !important;
-}
-[data-wallpaper="aurora"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
-  --chat-surface: #10161a; --chat-panel: rgba(25,32,36,0.96); --chat-ink: #eff6ff;
-  background-image: radial-gradient(circle at 20% 20%, rgba(203,179,232,.16), transparent 25%), radial-gradient(circle at 80% 15%, rgba(212,255,63,.08), transparent 20%), radial-gradient(circle at 60% 80%, rgba(227,66,52,.10), transparent 22%) !important;
+  background: var(--surface-alt) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
 }
 
+/* ── Override index.css .chat-layout rules (they are light-only, no dark:) ──
+   These use !important to beat the (0,2,0) specificity of the index.css rules. */
+#root > div > div > div[class*="h-\\[100dvh\\]"].chat-layout {
+  background: var(--surface) !important;
+  color: var(--ink) !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .chat-sidebar {
+  background: var(--surface) !important;
+  border-right: 1px solid var(--line) !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .chat-header,
+#root > div > div > div[class*="h-\\[100dvh\\]"] .chat-composer,
+#root > div > div > div[class*="h-\\[100dvh\\]"] .chat-search-bar,
+#root > div > div > div[class*="h-\\[100dvh\\]"] .chat-message-panel {
+  background: var(--surface-elevated) !important;
+  border-color: var(--line) !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .message-bubble.incoming {
+  background: var(--surface-alt) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .message-bubble.outgoing {
+  background: var(--cta) !important;
+  color: #fff !important;
+  border-color: var(--cta) !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .info-panel {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .chat-container {
+  background: var(--surface) !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .conversation-card {
+  background: var(--surface-alt) !important;
+  border-color: var(--line) !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .conversation-card.is-selected {
+  background: var(--cta) !important;
+  border-color: var(--cta) !important;
+  color: #fff !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .conversation-card.is-selected h4,
+#root > div > div > div[class*="h-\\[100dvh\\]"] .conversation-card.is-selected p,
+#root > div > div > div[class*="h-\\[100dvh\\]"] .conversation-card.is-selected .meta,
+#root > div > div > div[class*="h-\\[100dvh\\]"] .conversation-card.is-selected .timestamp {
+  color: #fff !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .conversation-card.is-selected .badge,
+#root > div > div > div[class*="h-\\[100dvh\\]"] .conversation-card.is-selected .status-pill {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #fff !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .chat-sidebar .search-input,
+#root > div > div > div[class*="h-\\[100dvh\\]"] .chat-compose textarea,
+#root > div > div > div[class*="h-\\[100dvh\\]"] .chat-compose input {
+  background: var(--surface-alt) !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .chat-sidebar .filter-chip.active {
+  background: var(--cta) !important;
+  color: #fff !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .send-button {
+  background: var(--cta) !important;
+  color: #fff !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .message-bubble .reply-box {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .message-bubble.outgoing .reply-box {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .message-bubble .meta,
+#root > div > div > div[class*="h-\\[100dvh\\]"] .message-bubble .time,
+#root > div > div > div[class*="h-\\[100dvh\\]"] .chat-empty,
+#root > div > div > div[class*="h-\\[100dvh\\]"] .chat-skeleton-label {
+  color: var(--ink-muted) !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .composer-actions {
+  background: var(--surface-alt) !important;
+  border-color: var(--line) !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] .presence-dot.online { background: var(--success) !important; }
+#root > div > div > div[class*="h-\\[100dvh\\]"] .presence-dot.offline { background: var(--ink-muted) !important; }
+#root > div > div > div[class*="h-\\[100dvh\\]"] .presence-dot.away { background: var(--warning) !important; }
+
+/* ── Motion reduction ───────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  #root > div > div > div[class*="h-\\[100dvh\\]"] * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  #root > div > div > div[class*="h-\\[100dvh\\]"] * {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* ── Wallpapers ─────────────────────────────────────────────────────────── */
+[data-wallpaper="clean"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #0d1117; --surface-elevated: #141b22; --surface-alt: #1a222b;
+  --ink: #f0f6fc; --ink-muted: #8b949e;
+}
+
+[data-wallpaper="midnight"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #0a0e14; --surface-elevated: #111827; --surface-alt: #1e2a3a;
+  --line: rgba(99, 102, 241, 0.12); --ink: #e0e7ff; --ink-muted: #6366f1;
+}
+
+[data-wallpaper="emerald"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #051a0f; --surface-elevated: #0a2e1a; --surface-alt: #13402a;
+  --line: rgba(63, 185, 80, 0.15); --ink: #dcfce7; --ink-muted: #4ade80;
+}
+
+[data-wallpaper="cyber"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #0d1117; --surface-elevated: #161b22; --surface-alt: #1c2128;
+  --line: rgba(168, 85, 247, 0.15); --ink: #f0e6ff; --ink-muted: #a855f7;
+  background: #0d1117 !important;
+  background-image:
+    linear-gradient(rgba(168, 85, 247, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 85, 247, 0.06) 1px, transparent 1px) !important;
+  background-size: 24px 24px !important;
+}
+
+[data-wallpaper="warm"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #130c06; --surface-elevated: #1c1209; --surface-alt: #2a1a0e;
+  --line: rgba(217, 119, 6, 0.15); --ink: #fff7ed; --ink-muted: #f59e0b;
+}
+
+[data-wallpaper="mocha"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #15100c; --surface-elevated: #1e1610; --surface-alt: #2a1e14;
+  --line: rgba(180, 130, 70, 0.15); --ink: #fef3e2; --ink-muted: #c9a86c;
+}
+
+[data-wallpaper="obsidian"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #080808; --surface-elevated: #0e0e0e; --surface-alt: #161616;
+  --line: rgba(255, 255, 255, 0.06); --ink: #f5f5f5; --ink-muted: #737373;
+}
+
+[data-wallpaper="carbon"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #0f0f11; --surface-elevated: #161618; --surface-alt: #1e1e22;
+  --line: rgba(255, 255, 255, 0.06); --ink: #f1f5f9; --ink-muted: #64748b;
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255,255,255,0.015) 0px,
+    rgba(255,255,255,0.015) 1px,
+    transparent 1px,
+    transparent 6px
+  ) !important;
+}
+
+[data-wallpaper="aurora"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #0a1628; --surface-elevated: #0f1f3a; --surface-alt: #162844;
+  --line: rgba(99, 102, 241, 0.15); --ink: #e0e7ff; --ink-muted: #6366f1;
+  background-image:
+    radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+    radial-gradient(ellipse at 80% 10%, rgba(168, 85, 247, 0.10) 0%, transparent 35%),
+    radial-gradient(ellipse at 60% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 30%) !important;
+}
+
+/* ── Light-mode wallpapers ──────────────────────────────────────────────── */
+html:not(.dark) [data-wallpaper="clean"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #f8fafc; --surface-elevated: #ffffff; --surface-alt: #f1f5f9;
+  --line: #e2e8f0; --ink: #0f172a; --ink-muted: #64748b;
+  background: #f1f5f9 !important;
+}
+
+html:not(.dark) [data-wallpaper="midnight"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #eef2ff; --surface-elevated: #ffffff; --surface-alt: #e0e7ff;
+  --line: #c7d2fe; --ink: #1e1b4b; --ink-muted: #6366f1;
+  background: #eef2ff !important;
+}
+
+html:not(.dark) [data-wallpaper="emerald"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #f0fdf4; --surface-elevated: #ffffff; --surface-alt: #dcfce7;
+  --line: #bbf7d0; --ink: #052e16; --ink-muted: #16a34a;
+  background: #f0fdf4 !important;
+}
+
+html:not(.dark) [data-wallpaper="cyber"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #faf5ff; --surface-elevated: #ffffff; --surface-alt: #f3e8ff;
+  --line: #e9d5ff; --ink: #2e1065; --ink-muted: #a855f7;
+  background: #faf5ff !important;
+  background-image:
+    linear-gradient(rgba(168, 85, 247, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 85, 247, 0.05) 1px, transparent 1px) !important;
+  background-size: 24px 24px !important;
+}
+
+html:not(.dark) [data-wallpaper="warm"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #fffbeb; --surface-elevated: #ffffff; --surface-alt: #fef3c7;
+  --line: #fde68a; --ink: #451a03; --ink-muted: #d97706;
+  background: #fffbeb !important;
+}
+
+html:not(.dark) [data-wallpaper="mocha"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #fefce8; --surface-elevated: #ffffff; --surface-alt: #fef9c3;
+  --line: #fde68a; --ink: #422006; --ink-muted: #ca8a04;
+  background: #fefce8 !important;
+}
+
+html:not(.dark) [data-wallpaper="obsidian"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #f4f4f5; --surface-elevated: #ffffff; --surface-alt: #e4e4e7;
+  --line: #d4d4d8; --ink: #09090b; --ink-muted: #71717a;
+  background: #f4f4f5 !important;
+}
+
+html:not(.dark) [data-wallpaper="carbon"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #f5f5f7; --surface-elevated: #ffffff; --surface-alt: #eaeaec;
+  --line: #d4d4d8; --ink: #09090b; --ink-muted: #71717a;
+  background: #f5f5f7 !important;
+}
+
+html:not(.dark) [data-wallpaper="aurora"] #root > div > div > div[class*="h-\\[100dvh\\]"] {
+  --surface: #eef2ff; --surface-elevated: #ffffff; --surface-alt: #e0e7ff;
+  --line: #c7d2fe; --ink: #1e1b4b; --ink-muted: #6366f1;
+  background: #eef2ff !important;
+  background-image:
+    radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.10) 0%, transparent 40%),
+    radial-gradient(ellipse at 80% 10%, rgba(168, 85, 247, 0.07) 0%, transparent 35%) !important;
 }
