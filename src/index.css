@@ -30,7 +30,7 @@
   --warning: #a16207;
   --white: #ffffff;
 
-  /* Chat shell tokens (overridden by premium-chat.css for the workspace skin) */
+  /* Chat shell tokens (dark theme is applied via html.dark overrides below) */
   --chat-shell-bg: #f7f7f8;
   --chat-surface: #ffffff;
   --chat-surface-alt: #f3f4f6;
@@ -44,6 +44,163 @@
   color-scheme: light;
   font-family: "Inter", "SF Pro Display", "Segoe UI", sans-serif;
 }
+
+/* ── Dark theme ────────────────────────────────────────────────────────────
+   ThemeContext toggles the `dark` class on <html>. These rules override the
+   light-only .chat-layout rules above so the chat UI renders dark. */
+html.dark {
+  --bg: #0d1117;
+  --bg-elevated: #141b22;
+  --surface: #0d1117;
+  --surface-strong: #1a222b;
+  --surface-soft: #161b22;
+  --border: #30363d;
+  --border-strong: #484f58;
+  --text: #f0f6fc;
+  --text-soft: #c9d1d9;
+  --text-muted: #8b949e;
+  --focus: rgba(88, 166, 255, 0.35);
+  --white: #f0f6fc;
+
+  --chat-shell-bg: #0d1117;
+  --chat-surface: #0d1117;
+  --chat-surface-alt: #161b22;
+  --chat-line: #30363d;
+  --chat-text: #f0f6fc;
+  --chat-text-soft: #c9d1d9;
+  --chat-muted: #8b949e;
+  --chat-accent: #58a6ff;
+  --chat-accent-soft: rgba(88, 166, 255, 0.15);
+
+  --success: #3fb950;
+  --warning: #d29922;
+}
+
+/* ── Chat UI readability overrides ────────────────────────────────────────
+   The chat UI uses Tailwind text-slate-400/500/600/700 classes which are
+   too light to read on the dark chat background. These rules boost their
+   contrast inside the chat shell only. */
+.chat-layout .text-slate-400 { color: #c9d1d9 !important; }
+.chat-layout .text-slate-500 { color: #b8c0ca !important; }
+.chat-layout .text-slate-600 { color: #aeb8c2 !important; }
+.chat-layout .text-slate-700 { color: #9aa6b0 !important; }
+.chat-layout .text-slate-800 { color: #8a95a0 !important; }
+.chat-layout .text-slate-900 { color: #f0f6fc !important; }
+.chat-layout .text-slate-100 { color: #ffffff !important; }
+
+html:not(.dark) .chat-layout .text-slate-400 { color: #6b7280 !important; }
+html:not(.dark) .chat-layout .text-slate-500 { color: #4b5563 !important; }
+html:not(.dark) .chat-layout .text-slate-600 { color: #374151 !important; }
+html:not(.dark) .chat-layout .text-slate-700 { color: #1f2937 !important; }
+html:not(.dark) .chat-layout .text-slate-800 { color: #111827 !important; }
+html:not(.dark) .chat-layout .text-slate-900 { color: #0f172a !important; }
+html:not(.dark) .chat-layout .text-slate-100 { color: #0f172a !important; }
+
+/* ── Chat shell background ────────────────────────────────────────────────
+   Drives the chat area background color in both light and dark modes. */
+.chat-layout {
+  background: var(--chat-shell-bg);
+  color: var(--chat-text);
+}
+
+.chat-layout .chat-sidebar {
+  background: var(--chat-surface);
+  border-right: 1px solid var(--chat-line);
+}
+
+.chat-layout .chat-header,
+.chat-layout .chat-composer,
+.chat-layout .chat-search-bar,
+.chat-layout .chat-message-panel {
+  background: var(--chat-surface-alt);
+  border-color: var(--chat-line);
+}
+
+.chat-layout .message-bubble.incoming {
+  background: var(--chat-surface);
+  color: var(--chat-text);
+  border-color: var(--chat-line);
+}
+
+.chat-layout .message-bubble.outgoing {
+  background: var(--chat-accent);
+  color: #fff;
+  border-color: var(--chat-accent);
+}
+
+.chat-layout .info-panel {
+  background: var(--chat-surface);
+  border-color: var(--chat-line);
+}
+
+.chat-layout .conversation-card {
+  background: var(--chat-surface);
+  border-color: var(--chat-line);
+}
+
+.chat-layout .conversation-card.is-selected {
+  background: var(--chat-accent);
+  border-color: var(--chat-accent);
+  color: #fff;
+}
+
+.chat-layout .conversation-card.is-selected h4,
+.chat-layout .conversation-card.is-selected p,
+.chat-layout .conversation-card.is-selected .meta,
+.chat-layout .conversation-card.is-selected .timestamp {
+  color: #fff;
+}
+
+.chat-layout .conversation-card.is-selected .badge,
+.chat-layout .conversation-card.is-selected .status-pill {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.chat-layout .chat-sidebar .search-input,
+.chat-layout .chat-compose textarea,
+.chat-layout .chat-compose input {
+  background: var(--chat-surface-alt);
+  border-color: var(--chat-line);
+  color: var(--chat-text);
+}
+
+.chat-layout .chat-sidebar .filter-chip.active {
+  background: var(--chat-accent);
+  color: #fff;
+}
+
+.chat-layout .send-button {
+  background: var(--chat-accent);
+  color: #fff;
+}
+
+.chat-layout .message-bubble .reply-box {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.chat-layout .message-bubble.outgoing .reply-box {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.chat-layout .composer-actions {
+  background: var(--chat-surface-alt);
+  border-color: var(--chat-line);
+}
+
+.chat-layout .presence-dot.online { background: var(--success); }
+.chat-layout .presence-dot.offline { background: var(--text-muted); }
+.chat-layout .presence-dot.away { background: var(--warning); }
+
+/* ── Override hardcoded Tailwind bg classes used in ChatLayout ──────────── */
+.chat-layout main { background: var(--chat-surface) !important; }
+.chat-layout [class*="bg-slate-50"] { background: var(--chat-surface) !important; }
+.chat-layout [class*="bg-slate-950"] { background: var(--chat-surface) !important; }
+.chat-layout [class*="bg-white"] { background: var(--chat-surface-alt) !important; }
+.chat-layout [class*="bg-slate-900"] { background: var(--chat-surface-alt) !important; }
+.chat-layout [class*="bg-slate-100"] { background: var(--chat-surface-alt) !important; }
+.chat-layout [class*="bg-slate-800"] { background: var(--chat-surface) !important; }
 
 * { box-sizing: border-box; }
 html, body, #root {
@@ -299,143 +456,6 @@ img, video { max-width: 100%; }
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.chat-layout {
-  --chat-shell-bg: #f7f7f8;
-  --chat-surface: #ffffff;
-  --chat-surface-alt: #f3f4f6;
-  --chat-line: #e5e7eb;
-  --chat-text: #18181b;
-  --chat-text-soft: #5f6470;
-  --chat-muted: #7b7f88;
-  --chat-accent: #18181b;
-  --chat-accent-soft: rgba(24, 24, 27, 0.08);
-  background: var(--chat-shell-bg);
-  color: var(--chat-text);
-}
-
-.chat-layout .chat-sidebar {
-  background: #ffffff;
-  border-right: 1px solid var(--chat-line);
-}
-
-.chat-layout .chat-sidebar .conversation-card {
-  background: #ffffff;
-  border: 1px solid transparent;
-  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-}
-
-.chat-layout .chat-sidebar .conversation-card:hover {
-  background: var(--chat-surface-alt);
-  border-color: var(--chat-line);
-}
-
-.chat-layout .chat-sidebar .conversation-card.is-selected {
-  background: #111827;
-  border-color: #111827;
-  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.08);
-}
-
-.chat-layout .chat-sidebar .conversation-card.is-selected h4,
-.chat-layout .chat-sidebar .conversation-card.is-selected p,
-.chat-layout .chat-sidebar .conversation-card.is-selected .meta,
-.chat-layout .chat-sidebar .conversation-card.is-selected .timestamp {
-  color: #ffffff;
-}
-
-.chat-layout .chat-sidebar .conversation-card.is-selected .badge,
-.chat-layout .chat-sidebar .conversation-card.is-selected .status-pill {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-}
-
-.chat-layout .chat-sidebar .search-input,
-.chat-layout .chat-compose textarea,
-.chat-layout .chat-compose input {
-  background: var(--chat-surface-alt);
-  border: 1px solid var(--chat-line);
-  color: var(--chat-text);
-}
-
-.chat-layout .chat-sidebar .filter-chip {
-  color: var(--chat-text-soft);
-  background: transparent;
-  border: 1px solid transparent;
-}
-
-.chat-layout .chat-sidebar .filter-chip.active {
-  background: var(--chat-accent);
-  color: #ffffff;
-}
-
-.chat-layout .chat-container { background: var(--chat-shell-bg); }
-
-.chat-layout .chat-header,
-.chat-layout .chat-composer,
-.chat-layout .chat-search-bar,
-.chat-layout .chat-message-panel,
-.chat-layout .message-bubble.outgoing {
-  background: #ffffff;
-}
-
-.chat-layout .chat-header {
-  border-bottom: 1px solid var(--chat-line);
-}
-
-.chat-layout .message-bubble.incoming {
-  background: #ffffff;
-  color: var(--chat-text);
-  border: 1px solid var(--chat-line);
-}
-
-.chat-layout .message-bubble.outgoing {
-  background: #111827;
-  color: #ffffff;
-  border: 1px solid #111827;
-}
-
-.chat-layout .message-bubble .reply-box {
-  background: rgba(17, 24, 39, 0.04);
-}
-
-.chat-layout .message-bubble.outgoing .reply-box {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-}
-
-.chat-layout .message-bubble .meta,
-.chat-layout .message-bubble .time,
-.chat-layout .chat-empty,
-.chat-layout .chat-skeleton-label {
-  color: var(--chat-muted);
-}
-
-.chat-layout .composer-actions {
-  background: var(--chat-surface-alt);
-  border: 1px solid var(--chat-line);
-}
-
-.chat-layout .send-button {
-  background: var(--chat-accent);
-  color: #ffffff;
-  box-shadow: 0 10px 18px rgba(17, 24, 39, 0.12);
-}
-
-.chat-layout .send-button:disabled { opacity: 0.45; }
-
-.chat-layout .presence-dot.online { background: #22c55e; }
-.chat-layout .presence-dot.offline { background: #a1a1aa; }
-.chat-layout .presence-dot.away { background: #f59e0b; }
-
-.chat-layout .info-panel {
-  background: #ffffff;
-  border-left: 1px solid var(--chat-line);
-}
-
-.chat-layout .info-panel .block {
-  background: var(--chat-surface-alt);
-  border: 1px solid var(--chat-line);
-}
-
 @media (max-width: 860px) {
   .landing-links { display: none; }
   .mobile-menu-button { display: inline-flex; }
@@ -473,3 +493,23 @@ img, video { max-width: 100%; }
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ── Chat UI readability overrides ────────────────────────────────────────
+   The chat UI uses Tailwind text-slate-400/500/600/700 classes which are
+   too light to read on the dark chat background. These rules boost their
+   contrast inside the chat shell only. */
+.chat-layout .text-slate-400 { color: #c9d1d9 !important; }
+.chat-layout .text-slate-500 { color: #b8c0ca !important; }
+.chat-layout .text-slate-600 { color: #aeb8c2 !important; }
+.chat-layout .text-slate-700 { color: #9aa6b0 !important; }
+.chat-layout .text-slate-800 { color: #8a95a0 !important; }
+.chat-layout .text-slate-900 { color: #f0f6fc !important; }
+.chat-layout .text-slate-100 { color: #ffffff !important; }
+
+html:not(.dark) .chat-layout .text-slate-400 { color: #6b7280 !important; }
+html:not(.dark) .chat-layout .text-slate-500 { color: #4b5563 !important; }
+html:not(.dark) .chat-layout .text-slate-600 { color: #374151 !important; }
+html:not(.dark) .chat-layout .text-slate-700 { color: #1f2937 !important; }
+html:not(.dark) .chat-layout .text-slate-800 { color: #111827 !important; }
+html:not(.dark) .chat-layout .text-slate-900 { color: #0f172a !important; }
+html:not(.dark) .chat-layout .text-slate-100 { color: #0f172a !important; }
