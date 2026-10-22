@@ -168,7 +168,8 @@ html:not(.dark) #root > div > div > div[class*="h-\\[100dvh\\]"] {
   border-color: var(--line) !important;
 }
 
-#root > div > div > div[class*="h-\\[100dvh\\]"] .chat-container {
+#root > div > div > div[class*="h-\\[100dvh\\]"] .chat-container,
+#root > div > div > div[class*="h-\\[100dvh\\]"] main {
   background: var(--surface) !important;
 }
 
@@ -214,8 +215,16 @@ html:not(.dark) #root > div > div > div[class*="h-\\[100dvh\\]"] {
   color: #fff !important;
 }
 
-#root > div > div > div[class*="h-\\[100dvh\\]"] .message-bubble .reply-box {
-  background: rgba(255, 255, 255, 0.06) !important;
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-slate-50"],
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-slate-950"],
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-slate-50/60"],
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="bg-slate-950/60"] {
+  background: var(--surface) !important;
+}
+
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="text-slate-900"],
+#root > div > div > div[class*="h-\\[100dvh\\]"] [class*="text-slate-100"] {
+  color: var(--ink) !important;
 }
 
 #root > div > div > div[class*="h-\\[100dvh\\]"] .message-bubble.outgoing .reply-box {
