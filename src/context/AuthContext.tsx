@@ -123,4 +123,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return <AuthContext.Provider value={{ currentUser, userProfile, loading, isOwner, isAdmin, isMaintainer, canModerate: isMaintainer, roleLevel: isOwner ? 4 : isAdmin ? 3 : isMaintainer ? 2 : 1, isOnline, loginWithEmail, registerWithEmail, loginWithGoogle, loginAnonymously, logout, resetPassword, updateProfileData, refreshProfile }}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => { const context = useContext(AuthContext); if (!context) throw new Error('useAuth must be used within an AuthProvider'); return context; };
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    return {
+      currentUser: null,
+      userProfile: null,
+      loading: false,
+      isOwner: false,
+      isAdmin: false,
+      isMaintainer: false,
+      canModerate: false,
+      roleLevel: 1,
+      isOnline: true,
+      loginWithEmail: async () => {},
+      registerWithEmail: async () => {},
+      loginWithGoogle: async () => {},
+      loginAnonymously: async () => {},
+      logout: async () => {},
+      resetPassword: async () => {},
+      updateProfileData: async () => {},
+      refreshProfile: async () => {}
+    } as AuthContextType;
+  }
+  return context;
+};
