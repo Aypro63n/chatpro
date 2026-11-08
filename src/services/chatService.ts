@@ -563,48 +563,121 @@ const compressImageFile = async (file: File): Promise<Blob> => {
   }
 };
 
-// Upload media to Firebase Storage and return a download URL.
+// Helper to convert blob/file to base64 data URL fallback
+const blobToDataURL = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
+// Upload media to Cloudinary using secure server-side signature and XMLHttpRequest for 0-100% progress tracking.
 export const uploadMediaFile = async (
   file: File | Blob,
   fileName: string,
   onProgress?: (progress: number) => void
 ): Promise<string> => {
-  const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
+  const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB limit
   if (file.size > MAX_FILE_SIZE) {
     throw new Error('File exceeds the 15MB size limit.');
   }
 
-  const payload = file instanceof File ? await compressImageFile(file) : file;
-  if (onProgress) onProgress(30);
-
-  const uid = auth.currentUser?.uid;
-  if (!uid) throw new Error('You must be signed in to send files.');
-
-  const safeName = `${Date.now()}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 60)}`;
-  const storageRef = ref(storage, `media/${uid}/${safeName}`);
-
-  try {
-    if (onProgress) onProgress(60);
-    const uploadTask = uploadBytesResumable(storageRef, payload);
-    
-    await new Promise<void>((resolve, reject) => {
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 40 + 60;
-          if (onProgress) onProgress(Math.min(99, Math.round(progress)));
-        },
-        (error) => reject(error),
-        () => resolve()
-      );
-    });
-
-    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-    if (onProgress) onProgress(100);
-    return downloadURL;
-  } catch (err: any) {
-    throw new Error(err.message || 'Upload failed. Please try again.');
+  // Validate allowed image/media types (JPG, JPEG, PNG, WEBP, GIF, etc.)
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'audio/webm', 'audio/ogg'];
+  if (file.type && !allowedTypes.includes(file.type) && !file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+    throw new Error('Unsupported file format. Please upload JPG, PNG, WEBP, GIF, or MP4.');
   }
+
+  const payload = file instanceof File ? await compressImageFile(file) : file;
+  if (onProgress) onProgress(5);
+
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+    throw new Error('You must be signed in to send files.');
+  }
+
+  const token = await currentUser.getIdToken();
+
+  // 1. Fetch Cloudinary signature from server endpoint
+  const sigRes = await fetch('/api/cloudinary-signature', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  });
+
+  if (!sigRes.ok) {
+    const errData = await sigRes.json().catch(() => ({}));
+    throw new Error(errData.error || 'Failed to initialize secure upload.');
+  }
+
+  const { signature, timestamp, apiKey, cloudName, folder } = await sigRes.json();
+  if (!cloudName || !signature || !timestamp || !apiKey) {
+    throw new Error('Invalid Cloudinary configuration received from server.');
+  }
+
+  if (onProgress) onProgress(15);
+
+  // 2. Prepare FormData for Cloudinary upload
+  const formData = new FormData();
+  formData.append('file', payload);
+  formData.append('api_key', apiKey);
+  formData.append('timestamp', String(timestamp));
+  formData.append('signature', signature);
+  formData.append('folder', folder);
+
+  const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
+
+  console.log('[Cloudinary Upload] Starting upload to:', uploadUrl);
+
+  // 3. Upload directly to Cloudinary using XMLHttpRequest for accurate 0-100% progress tracking
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', uploadUrl, true);
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percent = Math.round((event.loaded / event.total) * 85) + 15; // 15% to 100%
+        console.log(`[Cloudinary Upload] Progress: ${percent}%`);
+        if (onProgress) {
+          onProgress(Math.min(99, percent));
+        }
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const resData = JSON.parse(xhr.responseText);
+          const secureUrl = resData.secure_url;
+          if (!secureUrl) {
+            throw new Error('Cloudinary response missing secure_url.');
+          }
+          console.log('[Cloudinary Upload] SUCCESS: secure_url:', secureUrl);
+          if (onProgress) onProgress(100);
+          resolve(secureUrl);
+        } catch {
+          reject(new Error('Failed to parse Cloudinary response.'));
+        }
+      } else {
+        try {
+          const errData = JSON.parse(xhr.responseText);
+          reject(new Error(errData.error?.message || `Cloudinary upload failed with status ${xhr.status}`));
+        } catch {
+          reject(new Error(`Cloudinary upload failed with status ${xhr.status}`));
+        }
+      }
+    };
+
+    xhr.onerror = () => {
+      reject(new Error('Network error occurred during Cloudinary upload.'));
+    };
+
+    xhr.send(formData);
+  });
 };
 
 export const submitReport = async (

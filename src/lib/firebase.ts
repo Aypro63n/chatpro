@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { getStorage, ref, uploadBytes, deleteObject } from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
@@ -21,6 +21,32 @@ async function testConnection() {
   }
 }
 testConnection();
+
+// Diagnostic utility function to test Firebase Storage connectivity and permission scopes
+export async function testStorageConnectivity(): Promise<boolean> {
+  const user = auth.currentUser;
+  if (!user) {
+    console.log('[Storage Diagnostics] Skipping storage connectivity test: No user signed in.');
+    return false;
+  }
+
+  const testRef = ref(storage, `diagnostics/${user.uid}/test_${Date.now()}.txt`);
+  const testBlob = new Blob(['Firebase Storage diagnostic test payload'], { type: 'text/plain' });
+
+  try {
+    console.log('[Storage Diagnostics] Testing storage connectivity and write permissions to bucket:', storage.app.options.storageBucket);
+    const snapshot = await uploadBytes(testRef, testBlob);
+    console.log('[Storage Diagnostics] SUCCESS: Write permission verified. Uploaded test file to:', snapshot.ref.fullPath);
+    
+    // Clean up test file
+    await deleteObject(testRef);
+    console.log('[Storage Diagnostics] SUCCESS: Delete permission verified. Test file cleaned up.');
+    return true;
+  } catch (err: any) {
+    console.error('[Storage Diagnostics] FAILED: Storage permission or connectivity error:', err.code, err.message, err);
+    return false;
+  }
+}
 
 export enum OperationType {
   CREATE = 'create',

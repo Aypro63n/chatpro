@@ -1313,13 +1313,7 @@ export const ChatLayout: React.FC = () => {
           </div>
         )}
 
-        {/* Uploading progress notification */}
-        {uploadingProgress !== null && (
-          <div className="px-4 py-1 bg-indigo-600 text-white text-xs font-semibold flex items-center justify-between">
-            <span>Uploading attachment... {Math.round(uploadingProgress)}%</span>
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          </div>
-        )}
+
 
         {/* Messages Scroll Area */}
         <div ref={messagesContainerRef} className={`flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 ${wallpaperClasses[wallpaper] || wallpaperClasses.default}`}>
@@ -1712,7 +1706,25 @@ export const ChatLayout: React.FC = () => {
               onCancel={() => setShowVoiceRecorder(false)}
             />
           ) : (
-            <form onSubmit={handleSendMessage} className="flex items-center gap-2 px-2.5 sm:px-4 py-2.5 sm:py-3 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800/80">
+            <div className="flex flex-col border-t border-slate-200/80 dark:border-slate-800/80">
+              {uploadingProgress !== null && (
+                <div className="px-3 pt-2.5 pb-1.5 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/60">
+                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600" />
+                      Uploading attachment...
+                    </span>
+                    <span className="font-semibold">{Math.round(uploadingProgress)}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-200 rounded-full"
+                      style={{ width: `${Math.max(5, uploadingProgress)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              <form onSubmit={handleSendMessage} className="flex items-center gap-2 px-2.5 sm:px-4 py-2.5 sm:py-3 bg-white dark:bg-slate-900">
 
               {/* File Attachment Input (hidden) */}
               <input
@@ -1817,6 +1829,7 @@ export const ChatLayout: React.FC = () => {
                 )}
               </button>
             </form>
+            </div>
           )}
         </div>
 

@@ -1,19 +1,29 @@
-# Implementation Plan - Carousel Alignment & ChatLayout Glitch Fix
+# Implementation Plan - Cloudinary Image Upload Migration
 
-## Objectives
+## Proposed Changes
 
-1. **WorksWheel Carousel Layout (`works-wheel.tsx` & `index.css`)**:
-   - Ensure the 3D stage sits cleanly on the left and index buttons sit on the right without overflowing or hiding titles.
-2. **ChatLayout Glitch Fix (`ChatLayout.tsx` & `index.css`)**:
-   - Fix container flex/height properties (`h-full flex-1 min-h-0 overflow-hidden`) so the chat box UI renders properly on login.
+### 1. Server-Side Endpoint (`server.ts`)
+- Create an Express server `server.ts` mounting Vite middleware in dev and serving static build in production.
+- Add POST `/api/cloudinary-signature` endpoint.
+- Verify Firebase Auth ID token from `Authorization: Bearer <token>` header (or optional fallback during development).
+- Generate Cloudinary SHA-1 upload signature using `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`.
+- Return `timestamp`, `signature`, `apiKey`, `cloudName`, and `folder`.
 
-## Execution Steps
+### 2. Package Configuration (`package.json`)
+- Update `scripts` in `package.json` to use `"dev": "tsx server.ts"` and `"start": "node server.ts"`.
 
-### Step 1: Fix WorksWheel Stage CSS & Alignment
-- Adjust `.works-wheel` grid and `.works-wheel-stage` positioning in `index.css`.
+### 3. Frontend Cloudinary Uploader (`src/services/chatService.ts`)
+- Update `uploadMediaFile` to fetch signature from `/api/cloudinary-signature`.
+- Upload directly from browser to `https://api.cloudinary.com/v1_1/{cloudName}/image/upload` using `XMLHttpRequest` to track accurate 0% to 100% upload progress.
+- Support JPG, JPEG, PNG, WEBP, and GIF. Enforce 10MB file size limit.
+- Return Cloudinary `secure_url`.
 
-### Step 2: Fix ChatLayout Container Styles
-- Ensure `ChatLayout` root container fills available height (`h-full flex-1 flex min-h-0 overflow-hidden`).
+### 4. Vercel Environment Variables
+- Document required environment variables:
+  - `CLOUDINARY_CLOUD_NAME`
+  - `CLOUDINARY_API_KEY`
+  - `CLOUDINARY_API_SECRET`
+- (Note: Vercel also automatically handles Node.js API routes in `api/` or `server.ts`).
 
-### Step 3: Build & Verification
-- Compile and test applet build.
+### 5. Verification
+- Run `compile_applet` and `lint_applet` (`tsc --noEmit`).
