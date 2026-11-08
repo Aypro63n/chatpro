@@ -14,7 +14,6 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { supabase, syncFirebaseAuthWithSupabase } from '../lib/supabase';
 import { UserProfile } from '../types';
 
 interface AuthContextType {
@@ -50,8 +49,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let unsubscribeProfile: (() => void) | undefined;
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-      // Sync Firebase token with Supabase client on every auth state change
-      await syncFirebaseAuthWithSupabase();
 
       unsubscribeProfile?.(); unsubscribeProfile = undefined;
       setCurrentUser(user); setUserProfile(null);

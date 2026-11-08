@@ -22,7 +22,6 @@ import {
   getDownloadURL
 } from 'firebase/storage';
 import { auth, db, storage, handleFirestoreError, OperationType } from '../lib/firebase';
-import { supabase } from '../lib/supabase';
 import {
   Conversation,
   UserProfile,
@@ -564,7 +563,7 @@ const compressImageFile = async (file: File): Promise<Blob> => {
   }
 };
 
-// Upload media to Supabase Storage and return a download URL.
+// Upload media to Firebase Storage and return a download URL.
 export const uploadMediaFile = async (
   file: File | Blob,
   fileName: string,
@@ -576,32 +575,33 @@ export const uploadMediaFile = async (
   }
 
   const payload = file instanceof File ? await compressImageFile(file) : file;
-  if (onProgress) onProgress(15);
+  if (onProgress) onProgress(30);
 
   const uid = auth.currentUser?.uid;
   if (!uid) throw new Error('You must be signed in to send files.');
 
   const safeName = `${Date.now()}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 60)}`;
-  const filePath = `media/${uid}/${safeName}`;
+  const storageRef = ref(storage, `media/${uid}/${safeName}`);
 
   try {
-    const { data, error } = await supabase.storage
-      .from('chat-media')
-      .upload(filePath, payload, {
-        upsert: false
-      });
+    if (onProgress) onProgress(60);
+    const uploadTask = uploadBytesResumable(storageRef, payload);
+    
+    await new Promise<void>((resolve, reject) => {
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 40 + 60;
+          if (onProgress) onProgress(Math.min(99, Math.round(progress)));
+        },
+        (error) => reject(error),
+        () => resolve()
+      );
+    });
 
-    if (error) throw error;
-
-    // Use createSignedUrl for private bucket access
-    const { data: signedData, error: signedError } = await supabase.storage
-      .from('chat-media')
-      .createSignedUrl(data.path, 60 * 60); // 1 hour expiration
-
-    if (signedError) throw signedError;
-
+    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
     if (onProgress) onProgress(100);
-    return signedData.signedUrl;
+    return downloadURL;
   } catch (err: any) {
     throw new Error(err.message || 'Upload failed. Please try again.');
   }
